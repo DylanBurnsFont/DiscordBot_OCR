@@ -5,3 +5,8 @@ Reads MI scores
 - [ ] Database
 - [ ] Data visualization commands
 - [ ] Special ChartS
+
+## Slash command
+- `/mi` now supports an optional `output_format` argument:
+	- `csv` (default): returns the score CSV file
+	- `chart`: returns a matplotlib chart image of scores
