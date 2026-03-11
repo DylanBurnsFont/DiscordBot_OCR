@@ -1,3 +1,5 @@
 env*
 output/
 images/
+*copy.py
+data/
