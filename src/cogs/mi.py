@@ -15,7 +15,7 @@ from src.mi_utils import (
     write_scores_csv,
     write_scores_chart,
 )
-from src.database import create_scan, save_scores
+from src.database import create_scan, save_scores, get_player_by_discord_id
 
 
 class MICog(commands.Cog):
@@ -56,8 +56,10 @@ class MICog(commands.Cog):
             response_text = build_response_text(scores)
 
             # Persist scores to the database (upserts by player_name + date)
+            submitter = get_player_by_discord_id(str(interaction.user.id))
+            guild_id = submitter["game_guild_id"] if submitter else None
             scan_id = create_scan(submitted_by=str(interaction.user.id))
-            inserted, updated = save_scores(scan_id, scores)
+            inserted, updated = save_scores(scan_id, scores, guild_id=guild_id)
             print(f"Scan {scan_id}: {inserted} inserted, {updated} updated in DB")
 
             file_to_send = None

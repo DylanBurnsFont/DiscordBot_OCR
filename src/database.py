@@ -25,16 +25,18 @@ mi_scans
 mi_scores
     id               INTEGER PRIMARY KEY AUTOINCREMENT
     scan_id          INTEGER NOT NULL REFERENCES mi_scans(id) ON DELETE CASCADE
+    scan_date        TEXT    NOT NULL                 -- DD_MM_YYYY, denormalised from mi_scans for easy grouping
     rank             INTEGER NOT NULL                 -- 1-based position in this scan
     player_name      TEXT    NOT NULL                 -- in-game name as detected by OCR
     score            TEXT    NOT NULL                 -- raw score string e.g. "1.23B"
     player_id        INTEGER REFERENCES players(id)   -- auto-linked when username matches exactly
-    -- UNIQUE (player_name, scan_date via mi_scans) enforced in save_scores upsert logic
+    guild_id         INTEGER REFERENCES game_guilds(id) -- guild of the /mi submitter
+    -- UNIQUE (player_name, scan_date) enforced in save_scores upsert logic
 """
 
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 
@@ -93,21 +95,35 @@ def init_db(db_path: Path) -> None:
             CREATE TABLE IF NOT EXISTS mi_scores (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 scan_id     INTEGER NOT NULL REFERENCES mi_scans(id) ON DELETE CASCADE,
+                scan_date   TEXT    NOT NULL DEFAULT '',
                 rank        INTEGER NOT NULL,
                 player_name TEXT    NOT NULL,
                 score       TEXT    NOT NULL,
-                player_id   INTEGER REFERENCES players(id)
+                player_id   INTEGER REFERENCES players(id),
+                guild_id    INTEGER REFERENCES game_guilds(id)
             );
 
             CREATE INDEX IF NOT EXISTS idx_mi_scores_player_name ON mi_scores(player_name);
             CREATE INDEX IF NOT EXISTS idx_mi_scores_scan_id     ON mi_scores(scan_id);
         """)
 
-        # Migration: add scan_date to existing mi_scans tables that predate this column
-        try:
-            con.execute("ALTER TABLE mi_scans ADD COLUMN scan_date TEXT NOT NULL DEFAULT ''")
-        except sqlite3.OperationalError:
-            pass  # column already exists
+        # Migrations for columns added after initial release
+        for migration in [
+            "ALTER TABLE mi_scans  ADD COLUMN scan_date TEXT NOT NULL DEFAULT ''",
+            "ALTER TABLE mi_scores ADD COLUMN scan_date TEXT NOT NULL DEFAULT ''",
+            "ALTER TABLE mi_scores ADD COLUMN guild_id  INTEGER REFERENCES game_guilds(id)",
+        ]:
+            try:
+                con.execute(migration)
+            except sqlite3.OperationalError:
+                pass  # column already exists
+
+        # Backfill scan_date on mi_scores rows that predate this column
+        con.execute("""
+            UPDATE mi_scores
+            SET scan_date = (SELECT scan_date FROM mi_scans WHERE mi_scans.id = mi_scores.scan_id)
+            WHERE scan_date = ''
+        """)
 
 
 @contextmanager
@@ -206,7 +222,7 @@ def create_scan(submitted_by: str | None = None, scan_date: str | None = None) -
         return cur.lastrowid
 
 
-def save_scores(scan_id: int, scores: dict[str, str]) -> tuple[int, int]:
+def save_scores(scan_id: int, scores: dict[str, str], guild_id: int | None = None) -> tuple[int, int]:
     """
     Upsert OCR scores for a scan.
 
@@ -215,6 +231,7 @@ def save_scores(scan_id: int, scores: dict[str, str]) -> tuple[int, int]:
       - Existing row found and new score is higher → UPDATE (scan_id, rank, score).
       - Existing row found and new score is equal or lower → skip.
 
+    guild_id: game_guilds.id of the player who submitted /mi; applied to every row.
     Returns (inserted, updated) counts.
     """
     with _connect() as con:
@@ -236,11 +253,10 @@ def save_scores(scan_id: int, scores: dict[str, str]) -> tuple[int, int]:
             # Look for an existing score entry for this player on the same date
             existing = con.execute(
                 """
-                SELECT ms.id, ms.score
-                FROM   mi_scores ms
-                JOIN   mi_scans  sc ON sc.id = ms.scan_id
-                WHERE  ms.player_name = ?
-                  AND  sc.scan_date   = ?
+                SELECT id, score
+                FROM   mi_scores
+                WHERE  player_name = ?
+                  AND  scan_date   = ?
                 """,
                 (player_name, scan_date),
             ).fetchone()
@@ -250,20 +266,20 @@ def save_scores(scan_id: int, scores: dict[str, str]) -> tuple[int, int]:
                     con.execute(
                         """
                         UPDATE mi_scores
-                        SET scan_id = ?, rank = ?, score = ?, player_id = ?
+                        SET scan_id = ?, rank = ?, score = ?, player_id = ?, guild_id = ?
                         WHERE id = ?
                         """,
-                        (scan_id, rank, score, player_id, existing["id"]),
+                        (scan_id, rank, score, player_id, guild_id, existing["id"]),
                     )
                     updated += 1
                 # else: existing score is >= new score, leave it unchanged
             else:
                 con.execute(
                     """
-                    INSERT INTO mi_scores (scan_id, rank, player_name, score, player_id)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO mi_scores (scan_id, scan_date, rank, player_name, score, player_id, guild_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                     """,
-                    (scan_id, rank, player_name, score, player_id),
+                    (scan_id, scan_date, rank, player_name, score, player_id, guild_id),
                 )
                 inserted += 1
 
@@ -274,11 +290,10 @@ def get_scores_by_player(player_name: str) -> list[sqlite3.Row]:
     """All historical score rows for a given in-game player name, newest first."""
     with _connect() as con:
         return con.execute("""
-            SELECT ms.rank, ms.score, ms.player_name, sc.scan_date, sc.scanned_at
-            FROM mi_scores ms
-            JOIN mi_scans sc ON sc.id = ms.scan_id
-            WHERE ms.player_name = ?
-            ORDER BY sc.scan_date DESC
+            SELECT rank, score, player_name, scan_date
+            FROM mi_scores
+            WHERE player_name = ?
+            ORDER BY scan_date DESC
         """, (player_name,)).fetchall()
 
 
@@ -286,14 +301,57 @@ def get_latest_scan_scores() -> list[sqlite3.Row]:
     """All scores from the most recent scan date, ordered by rank."""
     with _connect() as con:
         return con.execute("""
-            SELECT ms.rank, ms.player_name, ms.score, sc.scan_date, sc.scanned_at
-            FROM mi_scores ms
-            JOIN mi_scans sc ON sc.id = ms.scan_id
-            WHERE sc.scan_date = (
-                SELECT scan_date FROM mi_scans ORDER BY scan_date DESC LIMIT 1
-            )
-            ORDER BY ms.rank
+            SELECT rank, player_name, score, scan_date
+            FROM mi_scores
+            WHERE scan_date = (SELECT MAX(scan_date) FROM mi_scores)
+            ORDER BY rank
         """).fetchall()
+
+def get_total_weekly_leaderboard(guild_name: str, ref_date: datetime | None = None) -> list[dict]:
+    """
+    Individual scores for each player in the given guild plus any unregistered
+    players detected by OCR that week. Sorted by total_score descending.
+    Returns a list of dicts: player_name, total_score (float), days_present,
+    and one key per day e.g. '11_03_2026' -> raw score string or None.
+    """
+    dates = _week_dates(ref_date)
+    placeholders = ",".join("?" * len(dates))
+    with _connect() as con:
+        guild_row = con.execute(
+            "SELECT id FROM game_guilds WHERE name = ?", (guild_name,)
+        ).fetchone()
+        if guild_row is None:
+            return []
+        guild_id = guild_row["id"]
+
+        rows = con.execute(f"""
+            SELECT player_name, scan_date, score
+            FROM mi_scores
+            WHERE guild_id = ?
+              AND scan_date IN ({placeholders})
+            ORDER BY player_name, scan_date
+        """, [guild_id] + dates).fetchall()
+
+    players: dict[str, dict] = {}
+    for row in rows:
+        name = row["player_name"]
+        if name not in players:
+            players[name] = {"player_name": name, "total_score": 0.0, "days_present": 0}
+            for d in dates:
+                players[name][d] = None
+        players[name][row["scan_date"]] = row["score"]
+        players[name]["total_score"] += _score_to_float(row["score"])
+        players[name]["days_present"] += 1
+
+    return sorted(players.values(), key=lambda r: r["total_score"], reverse=True)
+
+
+def _week_dates(ref_date: datetime | None = None) -> list[str]:
+    """Return DD_MM_YYYY strings for Mon–Sun of the week containing ref_date."""
+    if ref_date is None:
+        ref_date = datetime.now()
+    monday = ref_date - timedelta(days=ref_date.weekday())
+    return [(monday + timedelta(days=i)).strftime("%d_%m_%Y") for i in range(7)]
 
 
 def get_all_time_leaderboard() -> list[sqlite3.Row]:
@@ -305,19 +363,18 @@ def get_all_time_leaderboard() -> list[sqlite3.Row]:
         return con.execute("""
             SELECT
                 ms.player_name,
-                ms.rank        AS best_rank,
+                ms.rank      AS best_rank,
                 ms.score,
-                sc.scanned_at,
-                g.name         AS guild_name
+                ms.scan_date,
+                g.name       AS guild_name
             FROM mi_scores ms
-            JOIN mi_scans sc ON sc.id = ms.scan_id
             LEFT JOIN players p ON p.id = ms.player_id
             LEFT JOIN game_guilds g ON g.id = p.game_guild_id
             WHERE ms.id IN (
-                -- best rank (lowest number) per player, tie-break on newest scan
+                -- best rank (lowest number) per player, tie-break on newest scan_date
                 SELECT id FROM mi_scores ms2
                 WHERE ms2.player_name = ms.player_name
-                ORDER BY ms2.rank ASC, ms2.scan_id DESC
+                ORDER BY ms2.rank ASC, ms2.scan_date DESC
                 LIMIT 1
             )
             ORDER BY ms.rank ASC
