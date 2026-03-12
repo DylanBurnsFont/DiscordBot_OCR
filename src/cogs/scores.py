@@ -16,6 +16,7 @@ from src.database import (
     get_player_weekly_scores,
     get_player_monthly_scores,
     get_player_weekday_scores_for_month,
+    _score_to_float,
 )
 
 def knubeScore(knubeScore, offset):
@@ -139,7 +140,12 @@ class ScoresCog(commands.Cog):
     guild_scores = app_commands.Group(name="guild-scores", description="Show guild scores")
 
     @guild_scores.command(name="today", description="Show today's scores for your guild")
-    async def gs_today(self, interaction: discord.Interaction):
+    @app_commands.describe(view="Show raw scores or each player's % of total guild damage (default: scores)")
+    @app_commands.choices(view=[
+        app_commands.Choice(name="Scores", value="scores"),
+        app_commands.Choice(name="Percent", value="percent"),
+    ])
+    async def gs_today(self, interaction: discord.Interaction, view: str = "scores"):
         guild_name = await self._get_guild_name(interaction)
         if guild_name is None:
             return
@@ -150,8 +156,18 @@ class ScoresCog(commands.Cog):
                 f"No scores found for **{guild_name}** today.", ephemeral=True
             )
             return
+        SCORES = {row["player_name"]: row["score"] for row in rows}
+        MI_SCORES = dict(sorted(SCORES.items(), key=lambda x: _score_to_float(x[1]), reverse=True))
         label = f"today ({now.strftime('%d %b %Y')})"
-        lines = [f"`{r['rank']}.` **{r['player_name']}**: {r['score']}" for r in rows]
+        if view == "percent":
+            total = sum(_score_to_float(r['score']) for r in rows)
+            lines = [
+                f"`{i+1}.` **{key}**: {value} ({_score_to_float(value) / total * 100:.1f}%)"
+                if total else f"`{i+1}.` **{key}**: {value} (0%)"
+                for i, (key, value) in enumerate(MI_SCORES.items())
+            ]
+        else:
+            lines = [f"`{i+1}.` **{key}**: {value}" for i, (key, value) in enumerate(MI_SCORES.items())]
         await _send_chunked(interaction, f"📊 **{guild_name}** — {label}", lines)
 
     @guild_scores.command(name="week", description="Show weekly total scores for your guild")
@@ -162,6 +178,7 @@ class ScoresCog(commands.Cog):
     @app_commands.choices(view=[
         app_commands.Choice(name="Total", value="total"),
         app_commands.Choice(name="Daily", value="daily"),
+        app_commands.Choice(name="Percent", value="percent"),
     ])
     async def gs_week(self, interaction: discord.Interaction, day: int | None = None, view: str = "total"):
         guild_name = await self._get_guild_name(interaction)
@@ -199,6 +216,13 @@ class ScoresCog(commands.Cog):
                     for d in dates
                 )
                 lines.append(f"`{i+1}.` **{row['player_name']}** [{daily}] — **Total: {_fmt_score(row['total_score'])}**")
+        elif view == "percent":
+            grand_total = sum(row["total_score"] for row in scores_rows)
+            lines = [
+                f"`{i+1}.` **{row['player_name']}**: {_fmt_score(row['total_score'])} ({row['total_score'] / grand_total * 100:.1f}%)"
+                if grand_total else f"`{i+1}.` **{row['player_name']}**: {_fmt_score(row['total_score'])} (0%)"
+                for i, row in enumerate(scores_rows)
+            ]
         else:
             SCORES = {row["player_name"]: row["total_score"] for row in scores_rows}
             if isKnube and "KNUBE" in SCORES:
@@ -208,7 +232,8 @@ class ScoresCog(commands.Cog):
                 first_scores = [v for k, v in first_row.items() if isinstance(v, str) and v]
                 if knube_scores and first_scores:
                     SCORES["KNUBE"] = knubeScore(knube_scores[0], first_scores[0])
-            lines = [f"`{i+1}.` **{name}**: {_fmt_score(val)}" for i, (name, val) in enumerate(SCORES.items())]
+            MI_SCORES = dict(sorted(SCORES.items(), key=lambda x: x[1], reverse=True))
+            lines = [f"`{i+1}.` **{name}**: {_fmt_score(val)}" for i, (name, val) in enumerate(MI_SCORES.items())]
         await _send_chunked(interaction, f"📊 **{guild_name}** — {label}", lines)
 
     @guild_scores.command(name="month", description="Show monthly scores for your guild")
@@ -265,7 +290,12 @@ class ScoresCog(commands.Cog):
     user_score = app_commands.Group(name="user-score", description="Show your scores")
 
     @user_score.command(name="today", description="Show your score for today")
-    async def us_today(self, interaction: discord.Interaction):
+    @app_commands.describe(view="Show your score or your % of total guild damage today (default: score)")
+    @app_commands.choices(view=[
+        app_commands.Choice(name="Score", value="score"),
+        app_commands.Choice(name="Percent", value="percent"),
+    ])
+    async def us_today(self, interaction: discord.Interaction, view: str = "score"):
         player_name = await self._get_player_name(interaction)
         if player_name is None:
             return
@@ -275,9 +305,26 @@ class ScoresCog(commands.Cog):
             await interaction.response.send_message("No score found for you today.", ephemeral=True)
             return
         label = f"today ({now.strftime('%d %b %Y')})"
+        if view == "percent":
+            player = get_player_by_discord_id(str(interaction.user.id))
+            guild_name = None
+            if player and player["game_guild_id"]:
+                from src.database import _connect
+                with _connect() as con:
+                    g = con.execute("SELECT name FROM game_guilds WHERE id = ?", (player["game_guild_id"],)).fetchone()
+                if g:
+                    guild_name = g["name"]
+            if not guild_name:
+                await interaction.response.send_message("Could not determine your guild for % calculation.", ephemeral=True)
+                return
+            guild_rows = get_today_guild_scores(guild_name)
+            total = sum(_score_to_float(r['score']) for r in guild_rows)
+            pct = _score_to_float(entry['score']) / total * 100 if total else 0
+            msg = f"Rank **#{entry['rank']}** — **{entry['score']}** ({pct:.1f}% of guild total {_fmt_score(total)})"
+        else:
+            msg = f"Rank **#{entry['rank']}** — **{entry['score']}**"
         await interaction.response.send_message(
-            f"📊 **{player_name}** — {label}\nRank **#{entry['rank']}** — **{entry['score']}**",
-            ephemeral=True,
+            f"📊 **{player_name}** — {label}\n{msg}", ephemeral=True
         )
 
     @user_score.command(name="week", description="Show your scores for a week")
@@ -288,6 +335,7 @@ class ScoresCog(commands.Cog):
     @app_commands.choices(view=[
         app_commands.Choice(name="Total", value="total"),
         app_commands.Choice(name="Daily", value="daily"),
+        app_commands.Choice(name="Percent", value="percent"),
     ])
     async def us_week(self, interaction: discord.Interaction, day: int | None = None, view: str = "total"):
         player_name = await self._get_player_name(interaction)
@@ -321,6 +369,22 @@ class ScoresCog(commands.Cog):
                 f"{int(d[:2])} {mon_abbr} ({_DAY_NAMES[datetime.strptime(d, '%d_%m_%Y').weekday()][:3]}): —"
                 for d in dates
             ] + [f"**Total: {_fmt_score(data['total_score'])}**"]
+        elif view == "percent":
+            player = get_player_by_discord_id(str(interaction.user.id))
+            guild_name = None
+            if player and player["game_guild_id"]:
+                from src.database import _connect
+                with _connect() as con:
+                    g = con.execute("SELECT name FROM game_guilds WHERE id = ?", (player["game_guild_id"],)).fetchone()
+                if g:
+                    guild_name = g["name"]
+            if not guild_name:
+                await interaction.response.send_message("Could not determine your guild for % calculation.", ephemeral=True)
+                return
+            guild_rows = get_total_weekly_leaderboard(guild_name, ref_date)
+            guild_total = sum(r["total_score"] for r in guild_rows)
+            pct = data["total_score"] / guild_total * 100 if guild_total else 0
+            lines = [f"**{_fmt_score(data['total_score'])}** ({pct:.1f}% of guild total {_fmt_score(guild_total)}, {data['days_present']} day(s) submitted)"]
         else:
             lines = [f"**Total: {_fmt_score(data['total_score'])}** ({data['days_present']} day(s) submitted)"]
         await interaction.response.send_message(
