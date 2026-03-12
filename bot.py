@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
 import os
 import sys
@@ -15,13 +16,28 @@ EXTENSIONS = [
     "src.cogs.mi",
     "src.cogs.register",
     "src.cogs.ping",
+    "src.cogs.streak",
+    "src.cogs.help",
 ]
+
+
+class GuildLockedTree(app_commands.CommandTree):
+    """Rejects any slash command interaction that doesn't come from DISCORD_GUILD_ID."""
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        allowed = os.getenv("DISCORD_GUILD_ID")
+        if allowed and str(interaction.guild_id) != allowed:
+            await interaction.response.send_message(
+                "This bot is not available in this server.", ephemeral=True
+            )
+            return False
+        return True
 
 
 class DiscordBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
-        super().__init__(command_prefix="!", intents=intents)
+        super().__init__(command_prefix="!", intents=intents, tree_cls=GuildLockedTree)
         self.ROOT_DIR = ROOT_DIR
 
     async def setup_hook(self):
@@ -38,10 +54,10 @@ class DiscordBot(commands.Bot):
             guild = discord.Object(id=int(guild_id))
             self.tree.copy_global_to(guild=guild)
             guild_synced = await self.tree.sync(guild=guild)
-            print(f"Guild sync: {len(guild_synced)} command(s) synced instantly to guild {guild_id}")
-
-        synced = await self.tree.sync()
-        print(f"Global sync: {len(synced)} command(s) (up to 1 hour to propagate)")
+            print(f"Guild sync: {len(guild_synced)} command(s) synced to guild {guild_id}")
+        else:
+            synced = await self.tree.sync()
+            print(f"Global sync: {len(synced)} command(s)")
 
 
 bot = DiscordBot()

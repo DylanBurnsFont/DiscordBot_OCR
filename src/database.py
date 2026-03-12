@@ -247,7 +247,10 @@ def save_scores(scan_id: int, scores: dict[str, str], guild_id: int | None = Non
         inserted = 0
         updated = 0
 
-        for rank, (player_name, score) in enumerate(scores.items(), start=1):
+        # Sort by score descending so rank reflects actual leaderboard position
+        sorted_scores = sorted(scores.items(), key=lambda kv: _score_to_float(kv[1]), reverse=True)
+
+        for rank, (player_name, score) in enumerate(sorted_scores, start=1):
             player_id = name_to_player_id.get(player_name)
 
             # Look for an existing score entry for this player on the same date
@@ -295,6 +298,51 @@ def get_scores_by_player(player_name: str) -> list[sqlite3.Row]:
             WHERE player_name = ?
             ORDER BY scan_date DESC
         """, (player_name,)).fetchall()
+
+
+def get_today_score(player_name: str) -> sqlite3.Row | None:
+    """Return today's mi_scores row for *player_name*, or None."""
+    today = datetime.now().strftime("%d_%m_%Y")
+    with _connect() as con:
+        return con.execute(
+            "SELECT rank, score, scan_date FROM mi_scores WHERE player_name = ? AND scan_date = ?",
+            (player_name, today),
+        ).fetchone()
+
+
+def get_today_guild_scores(guild_name: str) -> list[dict]:
+    """
+    All scores recorded today for the given guild, sorted by rank.
+    Includes both registered and unregistered players detected by OCR.
+    Each dict contains: rank, player_name, score, player_id (None if unregistered).
+    """
+    today = datetime.now().strftime("%d_%m_%Y")
+    with _connect() as con:
+        guild_row = con.execute(
+            "SELECT id FROM game_guilds WHERE name = ?", (guild_name,)
+        ).fetchone()
+        if guild_row is None:
+            return []
+
+        rows = con.execute("""
+            SELECT rank, player_name, score, player_id
+            FROM mi_scores
+            WHERE guild_id = ? AND scan_date = ?
+            ORDER BY rank ASC
+        """, (guild_row["id"], today)).fetchall()
+
+    return [dict(row) for row in rows]
+
+
+def get_daily_scan_count(discord_user_id: str) -> int:
+    """Return how many /mi scans the user has submitted today."""
+    today = datetime.now().strftime("%d_%m_%Y")
+    with _connect() as con:
+        row = con.execute(
+            "SELECT COUNT(*) FROM mi_scans WHERE submitted_by = ? AND scan_date = ?",
+            (discord_user_id, today),
+        ).fetchone()
+        return row[0] if row else 0
 
 
 def get_latest_scan_scores() -> list[sqlite3.Row]:
@@ -399,3 +447,86 @@ def update_player_username(discord_user_id: str, new_username: str) -> None:
                    WHERE player_name = ?""",
                 (discord_user_id, old_username),
             )
+def get_streak(discord_user_id: str) -> int:
+    with _connect() as con:
+        rows = con.execute("""
+            SELECT DISTINCT date(scanned_at) as day
+            FROM mi_scans
+            WHERE submitted_by = ?
+            ORDER BY day DESC
+        """, (discord_user_id,)).fetchall()
+
+    streak = 0
+    if not rows:
+        return 0
+    today = datetime.now().date()
+    last_day = datetime.strptime(rows[0]["day"], "%Y-%m-%d").date()
+    # If the most recent scan is older than yesterday, streak is already broken
+    if (today - last_day).days > 1:
+        return 0
+    # Start counting from the most recent scan day (today or yesterday)
+    for i, row in enumerate(rows):
+        expected = last_day - timedelta(days=i)
+        if datetime.strptime(row["day"], "%Y-%m-%d").date() != expected:
+            break
+        streak += 1
+    return streak
+
+
+def get_guild_streaks(guild_name: str) -> list[dict]:
+    """
+    Returns the consecutive-day submission streak for every player registered
+    to *guild_name*.  Each entry contains 'username', 'discord_user_id', and
+    'streak'.  Results are sorted by streak descending.
+    """
+    with _connect() as con:
+        guild_row = con.execute(
+            "SELECT id FROM game_guilds WHERE name = ?", (guild_name,)
+        ).fetchone()
+        if guild_row is None:
+            return []
+
+        players = con.execute("""
+            SELECT discord_user_id, username
+            FROM players
+            WHERE game_guild_id = ?
+        """, (guild_row["id"],)).fetchall()
+
+        if not players:
+            return []
+
+        discord_ids = [p["discord_user_id"] for p in players]
+        placeholders = ",".join("?" * len(discord_ids))
+        scan_rows = con.execute(f"""
+            SELECT submitted_by, date(scanned_at) AS day
+            FROM mi_scans
+            WHERE submitted_by IN ({placeholders})
+            GROUP BY submitted_by, date(scanned_at)
+            ORDER BY submitted_by, day DESC
+        """, discord_ids).fetchall()
+
+    # Group distinct days per player (already ordered newest-first per player)
+    days_by_user: dict[str, list[str]] = {}
+    for row in scan_rows:
+        days_by_user.setdefault(row["submitted_by"], []).append(row["day"])
+
+    today = datetime.now().date()
+    results = []
+    for p in players:
+        uid = p["discord_user_id"]
+        days = days_by_user.get(uid, [])
+        streak = 0
+        if days:
+            last_day = datetime.strptime(days[0], "%Y-%m-%d").date()
+            if (today - last_day).days <= 1:
+                for i, day_str in enumerate(days):
+                    if datetime.strptime(day_str, "%Y-%m-%d").date() != last_day - timedelta(days=i):
+                        break
+                    streak += 1
+        results.append({
+            "username": p["username"],
+            "discord_user_id": uid,
+            "streak": streak,
+        })
+
+    return sorted(results, key=lambda r: r["streak"], reverse=True)

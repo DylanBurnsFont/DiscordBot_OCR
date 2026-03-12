@@ -11,25 +11,62 @@ from google.cloud import vision
 from src.mi_utils import (
     _is_image_filename,
     extract_scores_from_files,
-    build_response_text,
     write_scores_csv,
     write_scores_chart,
 )
-from src.database import create_scan, save_scores, get_player_by_discord_id
+from src.database import create_scan, save_scores, get_player_by_discord_id, get_today_score, get_daily_scan_count
+
+DAILY_SCAN_LIMIT = 1
+
+
+def _is_unlimited_user(interaction: discord.Interaction) -> bool:
+    """Returns True for the bot owner or anyone with a role listed in MI_UNLIMITED_ROLE_IDS."""
+    owner_id = os.getenv("DISCORD_OWNER_ID", "")
+    if owner_id and str(interaction.user.id) == owner_id:
+        return True
+    unlimited_ids = {
+        rid.strip()
+        for rid in os.getenv("MI_UNLIMITED_ROLE_IDS", "").split(",")
+        if rid.strip()
+    }
+    if unlimited_ids and isinstance(interaction.user, discord.Member):
+        return any(str(role.id) in unlimited_ids for role in interaction.user.roles)
+    return False
+
+
+class ConfirmUpdateView(discord.ui.View):
+    """Shown when the user already has a score today. Lets them confirm a re-run."""
+
+    def __init__(self, cog: "MICog", attachments: list):
+        super().__init__(timeout=60)
+        self.cog = cog
+        self.attachments = attachments
+
+    async def on_timeout(self):
+        # Disable buttons if the user never responds
+        for item in self.children:
+            item.disabled = True
+
+    @discord.ui.button(label="Yes, update", style=discord.ButtonStyle.danger)
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer(thinking=True)
+        await interaction.edit_original_response(content="Re-running OCR...", view=None)
+        await self.cog._run_ocr_for_attachments(
+            interaction, self.attachments
+        )
+        self.stop()
+
+    @discord.ui.button(label="No, keep existing", style=discord.ButtonStyle.secondary)
+    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.edit_message(content="Keeping your existing score.", view=None)
+        self.stop()
 
 
 class MICog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    async def _run_ocr_for_attachments(self, interaction, attachments, override=False, output_format="csv"):
-        if override:
-            await interaction.edit_original_response(content="Override enabled: Skipping OCR and returning dummy data.")
-            dummy_scores = {"Player1": "12345", "Player2": "67890", "Player3": "54321"}
-            response_text = build_response_text(dummy_scores)
-            await interaction.edit_original_response(content=response_text)
-            return
-
+    async def _run_ocr_for_attachments(self, interaction, attachments):
         image_attachments = [att for att in attachments if att and _is_image_filename(att.filename)]
         if not image_attachments:
             await interaction.edit_original_response(content="Please provide at least one image attachment.")
@@ -53,8 +90,6 @@ class MICog(commands.Cog):
                 lambda: extract_scores_from_files(vision_client, downloaded_files, max_height=1024),
             )
 
-            response_text = build_response_text(scores)
-
             # Persist scores to the database (upserts by player_name + date)
             submitter = get_player_by_discord_id(str(interaction.user.id))
             guild_id = submitter["game_guild_id"] if submitter else None
@@ -62,28 +97,10 @@ class MICog(commands.Cog):
             inserted, updated = save_scores(scan_id, scores, guild_id=guild_id)
             print(f"Scan {scan_id}: {inserted} inserted, {updated} updated in DB")
 
-            file_to_send = None
-            if output_format == "chart":
-                chart_name = f"monster_invasion_scores_{interaction.id}.png"
-                chart_path = temp_dir / chart_name
-                write_scores_chart(scores, chart_path)
-                file_to_send = chart_path
-            else:
-                csv_name = f"monster_invasion_scores_{interaction.id}.csv"
-                csv_path = temp_dir / csv_name
-                write_scores_csv(scores, csv_path)
-                file_to_send = csv_path
+            await interaction.edit_original_response(
+                content=f"✅ Done! Found **{len(scores)}** player(s) — {inserted} new, {updated} updated."
+            )
 
-            if len(response_text) > 1900:
-                await interaction.edit_original_response(
-                    content=f"Parsed scores are long, sending {output_format.upper()} file.",
-                    attachments=[discord.File(file_to_send)],
-                )
-            else:
-                await interaction.edit_original_response(
-                    content=response_text,
-                    attachments=[discord.File(file_to_send)],
-                )
         except Exception as exc:
             print(f"/mi failed: {exc}")
             await interaction.edit_original_response(content=f"Failed to process images: {exc}")
@@ -99,7 +116,6 @@ class MICog(commands.Cog):
         image3="Leaderboard screenshot (optional)",
         image4="Leaderboard screenshot (optional)",
         image5="Leaderboard screenshot (optional)",
-        output_format="Return `csv` (default) or `chart`",
     )
     async def mi_command(
         self,
@@ -109,19 +125,68 @@ class MICog(commands.Cog):
         image3: discord.Attachment | None = None,
         image4: discord.Attachment | None = None,
         image5: discord.Attachment | None = None,
-        override: bool = False,
-        output_format: Literal["csv", "chart"] = "csv",
     ):
         print(f"/mi invoked by {interaction.user} ({interaction.user.id})")
-        await interaction.response.defer(thinking=True)
-        await interaction.edit_original_response(content="Received command. Processing OCR...")
-        await self._run_ocr_for_attachments(
+        await self._mi_checks_and_run(
             interaction,
             [image1, image2, image3, image4, image5],
-            override=override,
-            output_format=output_format,
         )
+
+    async def _mi_checks_and_run(self, interaction: discord.Interaction, attachments: list):
+        """Shared pre-flight checks (registration, daily limit, duplicate) then runs OCR."""
+        player = get_player_by_discord_id(str(interaction.user.id))
+        if not player:
+            await interaction.response.send_message(
+                "You need to register before using this command. Use `/register` to get started.",
+                ephemeral=True,
+            )
+            return
+
+        if not _is_unlimited_user(interaction):
+            scans_today = get_daily_scan_count(str(interaction.user.id))
+            if scans_today >= DAILY_SCAN_LIMIT:
+                await interaction.response.send_message(
+                    f"You have reached the daily limit of **{DAILY_SCAN_LIMIT}** OCR scans. "
+                    f"Try again tomorrow!",
+                    ephemeral=True,
+                )
+                return
+
+        existing = get_today_score(player["username"])
+        if existing:
+            view = ConfirmUpdateView(cog=self, attachments=attachments)
+            await interaction.response.send_message(
+                f"A score for **{player['username']}** was already recorded today: "
+                f"**{existing['score']}** (rank #{existing['rank']}).\n"
+                f"Do you want to re-run OCR and update it?",
+                view=view,
+                ephemeral=True,
+            )
+            return
+
+        await interaction.response.defer(thinking=True)
+        await interaction.edit_original_response(content="Processing OCR...")
+        await self._run_ocr_for_attachments(interaction, attachments)
+
+
+@app_commands.context_menu(name="Process MI")
+async def mi_context_menu(interaction: discord.Interaction, message: discord.Message):
+    cog: MICog = interaction.client.cogs.get("MICog")  # type: ignore
+    if cog is None:
+        await interaction.response.send_message("Bot is not ready yet.", ephemeral=True)
+        return
+    print(f"Process MI context menu invoked by {interaction.user} on message {message.id}")
+    image_attachments = [a for a in message.attachments if _is_image_filename(a.filename)]
+    if not image_attachments:
+        await interaction.response.send_message(
+            "That message has no image attachments to process.",
+            ephemeral=True,
+        )
+        return
+    await cog._mi_checks_and_run(interaction, image_attachments)
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(MICog(bot))
+    cog = MICog(bot)
+    await bot.add_cog(cog)
+    bot.tree.add_command(mi_context_menu)

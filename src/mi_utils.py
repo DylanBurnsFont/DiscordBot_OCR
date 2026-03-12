@@ -1,6 +1,10 @@
 import cv2
 import csv
 import os
+import re
+import traceback
+
+from src.database import _score_to_float
 
 import matplotlib
 matplotlib.use("Agg")
@@ -120,6 +124,18 @@ def write_scores_chart(scores, out_file):
     plt.close(fig)
 
 
+_SCORE_RE = re.compile(r'^\d+(\.\d+)?[KMBTkmbt]$')
+
+
+def _is_valid_score(s: str) -> bool:
+    return bool(_SCORE_RE.match(s))
+
+
+def _is_valid_name(s: str) -> bool:
+    # Must be at least 2 characters and not itself a score token
+    return len(s) >= 2 and not _is_valid_score(s)
+
+
 def parseResults(results):
     MI_SCORES = {}
     removeString = ["zzz", "Zzz", "ZZz", "ZZZ", "zzZ", "zZz", "Zzz", "zzZ", "ZZz", "ZZZ"]
@@ -138,14 +154,26 @@ def parseResults(results):
     MI_SCORES[top3[1]] = top3[4]
     MI_SCORES[top3[2]] = top3[5]
 
+    # Remove top-3 entries with invalid scores
+    for name in [top3[0], top3[1], top3[2]]:
+        if name in MI_SCORES and not _is_valid_score(MI_SCORES[name]):
+            del MI_SCORES[name]
+
     # Get rid of the position of each player
     dets = [item for item in dets if not item.isdigit()]
-    names = dets[::2]
-    values = dets[1::2]
 
-    # Fill in dictionary with the rest of the results
-    for i in range(len(names)):
-        MI_SCORES[names[i]] = values[i]
+    # Sliding window: find consecutive (valid_name, valid_score) pairs.
+    # This is robust to garbled rows where OCR drops/adds tokens — unlike
+    # strict dets[::2]/dets[1::2] which shifts all subsequent pairs on any misalignment.
+    i = 0
+    while i < len(dets) - 1:
+        name = dets[i]
+        score = dets[i + 1]
+        if _is_valid_name(name) and _is_valid_score(score):
+            MI_SCORES[name] = score
+            i += 2
+        else:
+            i += 1
 
     # Get rid of whitespace and special characters
     for key in MI_SCORES:
@@ -156,7 +184,7 @@ def parseResults(results):
 
 
 def extract_scores_from_files(vision_client, image_paths, max_height=1024):
-    results = []
+    merged: dict[str, str] = {}
     for image_path in image_paths:
         image = cv2.imread(str(image_path))
         if image is None:
@@ -164,19 +192,25 @@ def extract_scores_from_files(vision_client, image_paths, max_height=1024):
 
         image = downscaleImage(image, max_height=max_height)
         raw_text = detect_text_raw(vision_client, image)
-        for line in raw_text.splitlines():
-            cleaned = line.strip()
-            if cleaned:
-                results.append(cleaned)
+        lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
 
-    return parseResults(results)
+        try:
+            scores = parseResults(lines)
+        except Exception as exc:
+            print(f"Could not parse {image_path}: {exc}")
+            traceback.print_exc()
+            continue
+
+        for name, score in scores.items():
+            if name not in merged or _score_to_float(score) > _score_to_float(merged[name]):
+                merged[name] = score
+
+    return merged
 
 
 def build_response_text(scores):
     if not scores:
         return "No scores found. Make sure the attachment(s) are MI leaderboard screenshots."
 
-    lines = ["Parsed Monster Invasion scores:"]
-    for name, score in scores.items():
-        lines.append(f"- {name}: {score}")
-    return "\n".join(lines)
+    else:
+        return "Scores processed!"
