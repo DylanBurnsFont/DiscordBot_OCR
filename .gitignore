@@ -1,6 +1,7 @@
 env*
 output/
 images/
-*copy.py
+.vscode/
 data/
+*copy.py
 testDB.py
