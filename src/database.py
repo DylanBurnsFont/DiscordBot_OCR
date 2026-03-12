@@ -34,6 +34,7 @@ mi_scores
     -- UNIQUE (player_name, scan_date) enforced in save_scores upsert logic
 """
 
+import calendar
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -400,6 +401,162 @@ def _week_dates(ref_date: datetime | None = None) -> list[str]:
         ref_date = datetime.now()
     monday = ref_date - timedelta(days=ref_date.weekday())
     return [(monday + timedelta(days=i)).strftime("%d_%m_%Y") for i in range(7)]
+
+
+def get_total_monthly_leaderboard(guild_name: str, year: int, month: int) -> list[dict]:
+    """
+    Sum all scores for players in a guild for the given year/month.
+    Sorted by total_score descending.
+    Returns list of dicts: player_name, total_score (float), days_present.
+    """
+    _, num_days = calendar.monthrange(year, month)
+    dates = [f"{d:02d}_{month:02d}_{year}" for d in range(1, num_days + 1)]
+    placeholders = ",".join("?" * len(dates))
+    with _connect() as con:
+        guild_row = con.execute(
+            "SELECT id FROM game_guilds WHERE name = ?", (guild_name,)
+        ).fetchone()
+        if guild_row is None:
+            return []
+        guild_id = guild_row["id"]
+
+        rows = con.execute(f"""
+            SELECT player_name, scan_date, score
+            FROM mi_scores
+            WHERE guild_id = ?
+              AND scan_date IN ({placeholders})
+            ORDER BY player_name, scan_date
+        """, [guild_id] + dates).fetchall()
+
+    players: dict[str, dict] = {}
+    for row in rows:
+        name = row["player_name"]
+        if name not in players:
+            players[name] = {"player_name": name, "total_score": 0.0, "days_present": 0}
+        players[name]["total_score"] += _score_to_float(row["score"])
+        players[name]["days_present"] += 1
+
+    return sorted(players.values(), key=lambda r: r["total_score"], reverse=True)
+
+
+def weekday_dates_for_month(year: int, month: int, weekday: int) -> list[str]:
+    """Return DD_MM_YYYY strings for every occurrence of weekday (0=Mon–6=Sun) in year/month."""
+    _, num_days = calendar.monthrange(year, month)
+    return [
+        f"{d:02d}_{month:02d}_{year}"
+        for d in range(1, num_days + 1)
+        if datetime(year, month, d).weekday() == weekday
+    ]
+
+
+def get_player_weekly_scores(player_name: str, ref_date: datetime | None = None) -> dict:
+    """
+    Scores for a single player across Mon–Sun of the week containing ref_date.
+    Returns dict: total_score (float), days_present, plus one key per date -> score string or None.
+    """
+    dates = _week_dates(ref_date)
+    placeholders = ",".join("?" * len(dates))
+    with _connect() as con:
+        rows = con.execute(f"""
+            SELECT scan_date, score FROM mi_scores
+            WHERE player_name = ? AND scan_date IN ({placeholders})
+        """, [player_name] + dates).fetchall()
+
+    result: dict = {"total_score": 0.0, "days_present": 0}
+    for d in dates:
+        result[d] = None
+    for row in rows:
+        result[row["scan_date"]] = row["score"]
+        result["total_score"] += _score_to_float(row["score"])
+        result["days_present"] += 1
+    return result
+
+
+def get_player_monthly_scores(player_name: str, year: int, month: int) -> dict:
+    """
+    Total scores for a single player across an entire month.
+    Returns dict: total_score (float), days_present.
+    """
+    _, num_days = calendar.monthrange(year, month)
+    dates = [f"{d:02d}_{month:02d}_{year}" for d in range(1, num_days + 1)]
+    placeholders = ",".join("?" * len(dates))
+    with _connect() as con:
+        rows = con.execute(f"""
+            SELECT scan_date, score FROM mi_scores
+            WHERE player_name = ? AND scan_date IN ({placeholders})
+        """, [player_name] + dates).fetchall()
+
+    result: dict = {"total_score": 0.0, "days_present": 0}
+    for row in rows:
+        result["total_score"] += _score_to_float(row["score"])
+        result["days_present"] += 1
+    return result
+
+
+def get_player_weekday_scores_for_month(player_name: str, year: int, month: int, weekday: int) -> dict:
+    """
+    Scores for a single player on each occurrence of weekday (0=Mon) in year/month.
+    Returns dict: total_score (float), days_present, plus one key per date -> score string or None.
+    """
+    dates = weekday_dates_for_month(year, month, weekday)
+    if not dates:
+        return {"total_score": 0.0, "days_present": 0}
+    placeholders = ",".join("?" * len(dates))
+    with _connect() as con:
+        rows = con.execute(f"""
+            SELECT scan_date, score FROM mi_scores
+            WHERE player_name = ? AND scan_date IN ({placeholders})
+        """, [player_name] + dates).fetchall()
+
+    result: dict = {"total_score": 0.0, "days_present": 0}
+    for d in dates:
+        result[d] = None
+    for row in rows:
+        result[row["scan_date"]] = row["score"]
+        result["total_score"] += _score_to_float(row["score"])
+        result["days_present"] += 1
+    return result
+
+
+def get_weekday_scores_for_month(guild_name: str, year: int, month: int, weekday: int) -> list[dict]:
+    """
+    Per-player scores for each occurrence of weekday (0=Mon) in year/month.
+    Sorted by total_score descending.
+    Returns list of dicts: player_name, total_score (float), days_present,
+    and one key per date e.g. '02_03_2026' -> score string or None.
+    """
+    dates = weekday_dates_for_month(year, month, weekday)
+    if not dates:
+        return []
+    placeholders = ",".join("?" * len(dates))
+    with _connect() as con:
+        guild_row = con.execute(
+            "SELECT id FROM game_guilds WHERE name = ?", (guild_name,)
+        ).fetchone()
+        if guild_row is None:
+            return []
+        guild_id = guild_row["id"]
+
+        rows = con.execute(f"""
+            SELECT player_name, scan_date, score
+            FROM mi_scores
+            WHERE guild_id = ?
+              AND scan_date IN ({placeholders})
+            ORDER BY player_name, scan_date
+        """, [guild_id] + dates).fetchall()
+
+    players: dict[str, dict] = {}
+    for row in rows:
+        name = row["player_name"]
+        if name not in players:
+            players[name] = {"player_name": name, "total_score": 0.0, "days_present": 0}
+            for d in dates:
+                players[name][d] = None
+        players[name][row["scan_date"]] = row["score"]
+        players[name]["total_score"] += _score_to_float(row["score"])
+        players[name]["days_present"] += 1
+
+    return sorted(players.values(), key=lambda r: r["total_score"], reverse=True)
 
 
 def get_all_time_leaderboard() -> list[sqlite3.Row]:

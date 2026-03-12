@@ -18,6 +18,7 @@ EXTENSIONS = [
     "src.cogs.ping",
     "src.cogs.streak",
     "src.cogs.help",
+    "src.cogs.scores",
 ]
 
 
