@@ -4,3 +4,4 @@ images/
 .vscode/
 *copy.py
 testDB.py
+*.json

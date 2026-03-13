@@ -1,4 +1,6 @@
 import os
+import csv
+import io
 from datetime import datetime, timedelta
 
 import discord
@@ -100,6 +102,19 @@ async def _send_chunked(
         await interaction.followup.send(chunk, ephemeral=True)
 
 
+def _create_csv_file(data: list[dict], filename: str) -> discord.File:
+    """Create a CSV file from data and return it as a discord.File."""
+    output = io.StringIO()
+    if data:
+        writer = csv.DictWriter(output, fieldnames=data[0].keys())
+        writer.writeheader()
+        writer.writerows(data)
+    
+    output.seek(0)
+    file_content = io.BytesIO(output.getvalue().encode('utf-8'))
+    return discord.File(file_content, filename=filename)
+
+
 class ScoresCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -174,13 +189,20 @@ class ScoresCog(commands.Cog):
     @app_commands.describe(
         day="Day of the current month whose week to show (default: current week)",
         view="Show the weekly total or individual daily scores (default: total)",
+        format="Output format: message or CSV file (default: message)",
     )
-    @app_commands.choices(view=[
-        app_commands.Choice(name="Total", value="total"),
-        app_commands.Choice(name="Daily", value="daily"),
-        app_commands.Choice(name="Percent", value="percent"),
-    ])
-    async def gs_week(self, interaction: discord.Interaction, day: int | None = None, view: str = "total"):
+    @app_commands.choices(
+        view=[
+            app_commands.Choice(name="Total", value="total"),
+            app_commands.Choice(name="Daily", value="daily"),
+            app_commands.Choice(name="Percent", value="percent"),
+        ],
+        format=[
+            app_commands.Choice(name="Message", value="message"),
+            app_commands.Choice(name="CSV File", value="csv"),
+        ]
+    )
+    async def gs_week(self, interaction: discord.Interaction, day: int | None = None, view: str = "total", format: str = "message"):
         guild_name = await self._get_guild_name(interaction)
         if guild_name is None:
             return
@@ -207,46 +229,87 @@ class ScoresCog(commands.Cog):
         from src.database import _week_dates
         dates = _week_dates(ref_date)
 
-        if view == "daily":
+        if format == "csv":
+            # Create CSV data
+            csv_data = []
             mon_abbr = ref_date.strftime("%b")
-            lines = []
+            
             for i, row in enumerate(scores_rows):
-                daily = " | ".join(
-                    f"{int(d[:2])} {mon_abbr}: {row[d]}" if row.get(d) else f"{int(d[:2])} {mon_abbr}: —"
-                    for d in dates
-                )
-                lines.append(f"`{i+1}.` **{row['player_name']}** [{daily}] — **Total: {_fmt_score(row['total_score'])}**")
-        elif view == "percent":
-            grand_total = sum(row["total_score"] for row in scores_rows)
-            lines = [
-                f"`{i+1}.` **{row['player_name']}**: {_fmt_score(row['total_score'])} ({row['total_score'] / grand_total * 100:.1f}%)"
-                if grand_total else f"`{i+1}.` **{row['player_name']}**: {_fmt_score(row['total_score'])} (0%)"
-                for i, row in enumerate(scores_rows)
-            ]
+                csv_row = {
+                    "Rank": i + 1,
+                    "Player": row['player_name'],
+                    "Total_Score": _fmt_score(row['total_score'])
+                }
+                
+                if view == "daily":
+                    for d in dates:
+                        day_label = _DAY_NAMES[datetime.strptime(d, '%d_%m_%Y').weekday()]
+                        csv_row[day_label] = row.get(d, "—")
+                elif view == "percent":
+                    grand_total = sum(r["total_score"] for r in scores_rows)
+                    percentage = (row['total_score'] / grand_total * 100) if grand_total else 0
+                    csv_row["Percentage"] = f"{percentage:.1f}%"
+                
+                csv_data.append(csv_row)
+            
+            filename = f"guild_weekly_scores_{ref_date.strftime('%Y_%m_%d')}.csv"
+            csv_file = _create_csv_file(csv_data, filename)
+            await interaction.response.send_message(
+                f"📊 **{guild_name}** weekly scores for {label}",
+                file=csv_file,
+                ephemeral=True
+            )
         else:
-            SCORES = {row["player_name"]: row["total_score"] for row in scores_rows}
-            if isKnube and "KNUBE" in SCORES:
-                knube_row = next((r for r in scores_rows if r["player_name"] == "KNUBE"), None)
-                first_row = scores_rows[0]
-                knube_scores = [v for k, v in (knube_row or {}).items() if isinstance(v, str) and v]
-                first_scores = [v for k, v in first_row.items() if isinstance(v, str) and v]
-                if knube_scores and first_scores:
-                    SCORES["KNUBE"] = knubeScore(knube_scores[0], first_scores[0])
-            MI_SCORES = dict(sorted(SCORES.items(), key=lambda x: x[1], reverse=True))
-            lines = [f"`{i+1}.` **{name}**: {_fmt_score(val)}" for i, (name, val) in enumerate(MI_SCORES.items())]
-        await _send_chunked(interaction, f"📊 **{guild_name}** — {label}", lines)
+            # Original message format
+            if view == "daily":
+                mon_abbr = ref_date.strftime("%b")
+                lines = []
+                for i, row in enumerate(scores_rows):
+                    daily = " | ".join(
+                        f"{int(d[:2])} {mon_abbr}: {row[d]}" if row.get(d) else f"{int(d[:2])} {mon_abbr}: —"
+                        for d in dates
+                    )
+                    lines.append(f"`{i+1}.` **{row['player_name']}** [{daily}] — **Total: {_fmt_score(row['total_score'])}**")
+            elif view == "percent":
+                grand_total = sum(row["total_score"] for row in scores_rows)
+                lines = [
+                    f"`{i+1}.` **{row['player_name']}**: {_fmt_score(row['total_score'])} ({row['total_score'] / grand_total * 100:.1f}%)"
+                    if grand_total else f"`{i+1}.` **{row['player_name']}**: {_fmt_score(row['total_score'])} (0%)"
+                    for i, row in enumerate(scores_rows)
+                ]
+            else:
+                SCORES = {row["player_name"]: row["total_score"] for row in scores_rows}
+                if isKnube and "KNUBE" in SCORES:
+                    knube_row = next((r for r in scores_rows if r["player_name"] == "KNUBE"), None)
+                    first_row = scores_rows[0]
+                    knube_scores = [v for k, v in (knube_row or {}).items() if isinstance(v, str) and v]
+                    first_scores = [v for k, v in first_row.items() if isinstance(v, str) and v]
+                    if knube_scores and first_scores:
+                        SCORES["KNUBE"] = knubeScore(knube_scores[0], first_scores[0])
+                MI_SCORES = dict(sorted(SCORES.items(), key=lambda x: x[1], reverse=True))
+                lines = [f"`{i+1}.` **{name}**: {_fmt_score(val)}" for i, (name, val) in enumerate(MI_SCORES.items())]
+            await _send_chunked(interaction, f"📊 **{guild_name}** — {label}", lines)
 
     @guild_scores.command(name="month", description="Show monthly scores for your guild")
     @app_commands.describe(
         week_day="Compare scores on each occurrence of this weekday across the month",
         month="Month to show (default: current month)",
+        format="Output format: message or CSV file (default: message)",
     )
-    @app_commands.choices(week_day=_WEEK_DAY_CHOICES, month=_MONTH_CHOICES)
+    @app_commands.choices(
+        week_day=_WEEK_DAY_CHOICES,
+        month=_MONTH_CHOICES,
+        format=[
+            app_commands.Choice(name="Message", value="message"),
+            app_commands.Choice(name="CSV File", value="csv"),
+        ]
+    )
     async def gs_month(
         self,
         interaction: discord.Interaction,
         week_day: int | None = None,
         month: int | None = None,
+        format: str = "message",
     ):
         guild_name = await self._get_guild_name(interaction)
         if guild_name is None:
@@ -265,13 +328,36 @@ class ScoresCog(commands.Cog):
                     f"No scores found for **{guild_name}** on {label}.", ephemeral=True
                 )
                 return
-            lines = []
-            for i, row in enumerate(scores_rows):
-                daily = " | ".join(
-                    f"{int(d[:2])} {mon_abbr}: {row[d]}" if row.get(d) else f"{int(d[:2])} {mon_abbr}: —"
-                    for d in dates
+            
+            if format == "csv":
+                csv_data = []
+                for i, row in enumerate(scores_rows):
+                    csv_row = {
+                        "Rank": i + 1,
+                        "Player": row['player_name'],
+                        "Total_Score": _fmt_score(row['total_score'])
+                    }
+                    for d in dates:
+                        day_label = _DAY_NAMES[datetime.strptime(d, '%d_%m_%Y').weekday()]
+                        csv_row[day_label] = row.get(d, "—")
+                    csv_data.append(csv_row)
+                
+                filename = f"guild_monthly_{_DAY_NAMES[week_day].lower()}s_{now.year}_{month_num:02d}.csv"
+                csv_file = _create_csv_file(csv_data, filename)
+                await interaction.response.send_message(
+                    f"📊 **{guild_name}** — {label}",
+                    file=csv_file,
+                    ephemeral=True
                 )
-                lines.append(f"`{i+1}.` **{row['player_name']}** [{daily}] — **Total: {_fmt_score(row['total_score'])}**")
+            else:
+                lines = []
+                for i, row in enumerate(scores_rows):
+                    daily = " | ".join(
+                        f"{int(d[:2])} {mon_abbr}: {row[d]}" if row.get(d) else f"{int(d[:2])} {mon_abbr}: —"
+                        for d in dates
+                    )
+                    lines.append(f"`{i+1}.` **{row['player_name']}** [{daily}] — **Total: {_fmt_score(row['total_score'])}**")
+                await _send_chunked(interaction, f"📊 **{guild_name}** — {label}", lines)
         else:
             label = month_label
             scores_rows = get_total_monthly_leaderboard(guild_name, now.year, month_num)
@@ -280,11 +366,30 @@ class ScoresCog(commands.Cog):
                     f"No scores found for **{guild_name}** in {label}.", ephemeral=True
                 )
                 return
-            lines = [
-                f"`{i+1}.` **{row['player_name']}**: {_fmt_score(row['total_score'])}"
-                for i, row in enumerate(scores_rows)
-            ]
-        await _send_chunked(interaction, f"📊 **{guild_name}** — {label}", lines)
+            
+            if format == "csv":
+                csv_data = [
+                    {
+                        "Rank": i + 1,
+                        "Player": row['player_name'],
+                        "Total_Score": _fmt_score(row['total_score'])
+                    }
+                    for i, row in enumerate(scores_rows)
+                ]
+                
+                filename = f"guild_monthly_scores_{now.year}_{month_num:02d}.csv"
+                csv_file = _create_csv_file(csv_data, filename)
+                await interaction.response.send_message(
+                    f"📊 **{guild_name}** — {label}",
+                    file=csv_file,
+                    ephemeral=True
+                )
+            else:
+                lines = [
+                    f"`{i+1}.` **{row['player_name']}**: {_fmt_score(row['total_score'])}"
+                    for i, row in enumerate(scores_rows)
+                ]
+                await _send_chunked(interaction, f"📊 **{guild_name}** — {label}", lines)
 
     # ── /user-score ────────────────────────────────────────────────────
     user_score = app_commands.Group(name="user-score", description="Show your scores")
@@ -331,13 +436,20 @@ class ScoresCog(commands.Cog):
     @app_commands.describe(
         day="Day of the current month whose week to show (default: current week)",
         view="Show the weekly total or individual daily scores (default: total)",
+        format="Output format: message or CSV file (default: message)",
     )
-    @app_commands.choices(view=[
-        app_commands.Choice(name="Total", value="total"),
-        app_commands.Choice(name="Daily", value="daily"),
-        app_commands.Choice(name="Percent", value="percent"),
-    ])
-    async def us_week(self, interaction: discord.Interaction, day: int | None = None, view: str = "total"):
+    @app_commands.choices(
+        view=[
+            app_commands.Choice(name="Total", value="total"),
+            app_commands.Choice(name="Daily", value="daily"),
+            app_commands.Choice(name="Percent", value="percent"),
+        ],
+        format=[
+            app_commands.Choice(name="Message", value="message"),
+            app_commands.Choice(name="CSV File", value="csv"),
+        ]
+    )
+    async def us_week(self, interaction: discord.Interaction, day: int | None = None, view: str = "total", format: str = "message"):
         player_name = await self._get_player_name(interaction)
         if player_name is None:
             return
@@ -362,46 +474,95 @@ class ScoresCog(commands.Cog):
         from src.database import _week_dates
         dates = _week_dates(ref_date)
         mon_abbr = ref_date.strftime("%b")
-        if view == "daily":
-            lines = [
-                f"{int(d[:2])} {mon_abbr} ({_DAY_NAMES[datetime.strptime(d, '%d_%m_%Y').weekday()][:3]}): {data[d]}"
-                if data.get(d) else
-                f"{int(d[:2])} {mon_abbr} ({_DAY_NAMES[datetime.strptime(d, '%d_%m_%Y').weekday()][:3]}): —"
-                for d in dates
-            ] + [f"**Total: {_fmt_score(data['total_score'])}**"]
-        elif view == "percent":
-            player = get_player_by_discord_id(str(interaction.user.id))
-            guild_name = None
-            if player and player["game_guild_id"]:
-                from src.database import _connect
-                with _connect() as con:
-                    g = con.execute("SELECT name FROM game_guilds WHERE id = ?", (player["game_guild_id"],)).fetchone()
-                if g:
-                    guild_name = g["name"]
-            if not guild_name:
-                await interaction.response.send_message("Could not determine your guild for % calculation.", ephemeral=True)
-                return
-            guild_rows = get_total_weekly_leaderboard(guild_name, ref_date)
-            guild_total = sum(r["total_score"] for r in guild_rows)
-            pct = data["total_score"] / guild_total * 100 if guild_total else 0
-            lines = [f"**{_fmt_score(data['total_score'])}** ({pct:.1f}% of guild total {_fmt_score(guild_total)}, {data['days_present']} day(s) submitted)"]
+        
+        if format == "csv":
+            csv_data = []
+            csv_row = {
+                "Player": player_name,
+                "Total_Score": _fmt_score(data['total_score']),
+                "Days_Submitted": data['days_present']
+            }
+            
+            if view == "daily":
+                for d in dates:
+                    day_label = _DAY_NAMES[datetime.strptime(d, '%d_%m_%Y').weekday()]
+                    csv_row[day_label] = data.get(d, "—")
+            elif view == "percent":
+                player = get_player_by_discord_id(str(interaction.user.id))
+                guild_name = None
+                if player and player["game_guild_id"]:
+                    from src.database import _connect
+                    with _connect() as con:
+                        g = con.execute("SELECT name FROM game_guilds WHERE id = ?", (player["game_guild_id"],)).fetchone()
+                    if g:
+                        guild_name = g["name"]
+                if guild_name:
+                    guild_rows = get_total_weekly_leaderboard(guild_name, ref_date)
+                    guild_total = sum(r["total_score"] for r in guild_rows)
+                    pct = data["total_score"] / guild_total * 100 if guild_total else 0
+                    csv_row["Guild_Total"] = _fmt_score(guild_total)
+                    csv_row["Percentage"] = f"{pct:.1f}%"
+            
+            csv_data.append(csv_row)
+            
+            filename = f"user_weekly_scores_{player_name}_{ref_date.strftime('%Y_%m_%d')}.csv"
+            csv_file = _create_csv_file(csv_data, filename)
+            await interaction.response.send_message(
+                f"📊 **{player_name}** weekly scores for {label}",
+                file=csv_file,
+                ephemeral=True
+            )
         else:
-            lines = [f"**Total: {_fmt_score(data['total_score'])}** ({data['days_present']} day(s) submitted)"]
-        await interaction.response.send_message(
-            f"📊 **{player_name}** — {label}\n" + "\n".join(lines), ephemeral=True
-        )
+            # Original message format
+            if view == "daily":
+                lines = [
+                    f"{int(d[:2])} {mon_abbr} ({_DAY_NAMES[datetime.strptime(d, '%d_%m_%Y').weekday()][:3]}): {data[d]}"
+                    if data.get(d) else
+                    f"{int(d[:2])} {mon_abbr} ({_DAY_NAMES[datetime.strptime(d, '%d_%m_%Y').weekday()][:3]}): —"
+                    for d in dates
+                ] + [f"**Total: {_fmt_score(data['total_score'])}**"]
+            elif view == "percent":
+                player = get_player_by_discord_id(str(interaction.user.id))
+                guild_name = None
+                if player and player["game_guild_id"]:
+                    from src.database import _connect
+                    with _connect() as con:
+                        g = con.execute("SELECT name FROM game_guilds WHERE id = ?", (player["game_guild_id"],)).fetchone()
+                    if g:
+                        guild_name = g["name"]
+                if not guild_name:
+                    await interaction.response.send_message("Could not determine your guild for % calculation.", ephemeral=True)
+                    return
+                guild_rows = get_total_weekly_leaderboard(guild_name, ref_date)
+                guild_total = sum(r["total_score"] for r in guild_rows)
+                pct = data["total_score"] / guild_total * 100 if guild_total else 0
+                lines = [f"**{_fmt_score(data['total_score'])}** ({pct:.1f}% of guild total {_fmt_score(guild_total)}, {data['days_present']} day(s) submitted)"]
+            else:
+                lines = [f"**Total: {_fmt_score(data['total_score'])}** ({data['days_present']} day(s) submitted)"]
+            await interaction.response.send_message(
+                f"📊 **{player_name}** — {label}\n" + "\n".join(lines), ephemeral=True
+            )
 
     @user_score.command(name="month", description="Show your scores for a month")
     @app_commands.describe(
         week_day="Compare your scores on each occurrence of this weekday across the month",
         month="Month to show (default: current month)",
+        format="Output format: message or CSV file (default: message)",
     )
-    @app_commands.choices(week_day=_WEEK_DAY_CHOICES, month=_MONTH_CHOICES)
+    @app_commands.choices(
+        week_day=_WEEK_DAY_CHOICES,
+        month=_MONTH_CHOICES,
+        format=[
+            app_commands.Choice(name="Message", value="message"),
+            app_commands.Choice(name="CSV File", value="csv"),
+        ]
+    )
     async def us_month(
         self,
         interaction: discord.Interaction,
         week_day: int | None = None,
         month: int | None = None,
+        format: str = "message",
     ):
         player_name = await self._get_player_name(interaction)
         if player_name is None:
@@ -420,10 +581,38 @@ class ScoresCog(commands.Cog):
                     f"No scores found for {label}.", ephemeral=True
                 )
                 return
-            lines = [
-                f"{int(d[:2])} {mon_abbr}: {data[d]}" if data.get(d) else f"{int(d[:2])} {mon_abbr}: —"
-                for d in dates
-            ] + [f"**Total: {_fmt_score(data['total_score'])}**"]
+            
+            if format == "csv":
+                csv_data = []
+                csv_row = {
+                    "Player": player_name,
+                    "Total_Score": _fmt_score(data['total_score']),
+                    "Days_Submitted": data['days_present'],
+                    "Weekday": _DAY_NAMES[week_day],
+                    "Month_Year": month_label
+                }
+                
+                for d in dates:
+                    day_label = _DAY_NAMES[datetime.strptime(d, '%d_%m_%Y').weekday()]
+                    csv_row[day_label] = data.get(d, "—")
+                
+                csv_data.append(csv_row)
+                
+                filename = f"user_monthly_{_DAY_NAMES[week_day].lower()}s_{player_name}_{now.year}_{month_num:02d}.csv"
+                csv_file = _create_csv_file(csv_data, filename)
+                await interaction.response.send_message(
+                    f"📊 **{player_name}** — {label}",
+                    file=csv_file,
+                    ephemeral=True
+                )
+            else:
+                lines = [
+                    f"{int(d[:2])} {mon_abbr}: {data[d]}" if data.get(d) else f"{int(d[:2])} {mon_abbr}: —"
+                    for d in dates
+                ] + [f"**Total: {_fmt_score(data['total_score'])}**"]
+                await interaction.response.send_message(
+                    f"📊 **{player_name}** — {label}\n" + "\n".join(lines), ephemeral=True
+                )
         else:
             label = month_label
             data = get_player_monthly_scores(player_name, now.year, month_num)
@@ -432,13 +621,30 @@ class ScoresCog(commands.Cog):
                     f"No scores found for {label}.", ephemeral=True
                 )
                 return
-            lines = [
-                f"Days submitted: **{data['days_present']}**",
-                f"Total: **{_fmt_score(data['total_score'])}**",
-            ]
-        await interaction.response.send_message(
-            f"📊 **{player_name}** — {label}\n" + "\n".join(lines), ephemeral=True
-        )
+            
+            if format == "csv":
+                csv_data = [{
+                    "Player": player_name,
+                    "Month_Year": month_label,
+                    "Days_Submitted": data['days_present'],
+                    "Total_Score": _fmt_score(data['total_score'])
+                }]
+                
+                filename = f"user_monthly_scores_{player_name}_{now.year}_{month_num:02d}.csv"
+                csv_file = _create_csv_file(csv_data, filename)
+                await interaction.response.send_message(
+                    f"📊 **{player_name}** — {label}",
+                    file=csv_file,
+                    ephemeral=True
+                )
+            else:
+                lines = [
+                    f"Days submitted: **{data['days_present']}**",
+                    f"Total: **{_fmt_score(data['total_score'])}**",
+                ]
+                await interaction.response.send_message(
+                    f"📊 **{player_name}** — {label}\n" + "\n".join(lines), ephemeral=True
+                )
 
 
 async def setup(bot: commands.Bot):
