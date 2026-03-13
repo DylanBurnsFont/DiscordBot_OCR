@@ -1,5 +1,6 @@
 import cv2
 import csv
+import json
 import os
 import re
 import traceback
@@ -31,6 +32,23 @@ def _configure_chart_font():
 
 
 _configure_chart_font()
+
+# Load name corrections
+_NAME_CORRECTIONS = {}
+try:
+    corrections_path = os.path.join(os.path.dirname(__file__), '..', 'corrections', 'corrections.json')
+    with open(corrections_path, 'r', encoding='utf-8') as f:
+        _NAME_CORRECTIONS = json.load(f)
+except FileNotFoundError:
+    print("❌ No corrections.json file found - name corrections disabled")
+except Exception as e:
+    print(f"❌ Error loading corrections.json: {e}")
+
+
+def _apply_name_corrections(name: str) -> str:
+    """Apply OCR name corrections from corrections.json."""
+    corrected_name = _NAME_CORRECTIONS.get(name, name)
+    return corrected_name
 
 
 def detect_text_raw(vision_client, image):
@@ -170,11 +188,12 @@ def parseResults(results):
     # Process top-3 scores with OCR correction
     top3_pairs = [(top3[0], top3[3]), (top3[1], top3[4]), (top3[2], top3[5])]
     for name, score in top3_pairs:
+        corrected_name = _apply_name_corrections(name)
         is_valid, corrected_score = _correct_and_validate_score(score)
         if is_valid:
-            MI_SCORES[name] = corrected_score
+            MI_SCORES[corrected_name] = corrected_score
 
-    print(dets)
+    # print(dets)
     # Get rid of the position of each player
     dets = [item for item in dets if not item.isdigit()]
 
@@ -186,20 +205,22 @@ def parseResults(results):
         name = dets[i]
         score = dets[i + 1]
         if _is_valid_name(name):
+            corrected_name = _apply_name_corrections(name)
             is_valid, corrected_score = _correct_and_validate_score(score)
             if is_valid:
-                MI_SCORES[name] = corrected_score
+                MI_SCORES[corrected_name] = corrected_score
                 i += 2
             else:
                 i += 1
         else:
             i += 1
 
-    # Get rid of whitespace and special characters
+    # Get rid of whitespace and special characters FROM SCORES ONLY
     for key in MI_SCORES:
         for char in ' <>_-':
             MI_SCORES[key] = MI_SCORES[key].replace(char, '')
 
+    print(f"🎯 Final processed names: {list(MI_SCORES.keys())}")
     return MI_SCORES
 
 

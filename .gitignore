@@ -7,3 +7,4 @@ testDB.py
 *.json
 src/__pycache__/
 src/cogs/__pycache__/
+data/

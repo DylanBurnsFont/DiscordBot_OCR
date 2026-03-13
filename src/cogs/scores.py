@@ -18,8 +18,15 @@ from src.database import (
     get_player_weekly_scores,
     get_player_monthly_scores,
     get_player_weekday_scores_for_month,
+    get_guild_weekly_attendance,
     _score_to_float,
 )
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import matplotlib.colors as mcolors
+from io import BytesIO
 
 def knubeScore(knubeScore, offset):
     mult = {'K': 1e3, 'M':1e6, 'B':1e9, 'T':1e12}
@@ -84,6 +91,21 @@ _MONTH_CHOICES = [
     app_commands.Choice(name="December", value=12),
 ]
 
+CANDIDATES = [
+        "Microsoft YaHei",     # Chinese (Simplified) - best for CJK
+        "Microsoft JhengHei",  # Chinese (Traditional) 
+        "Malgun Gothic",       # Korean
+        "Yu Gothic",           # Japanese
+        "Segoe UI",
+        "Segoe UI Historic",   # Better Unicode support
+        "Calibri", 
+        "Tahoma",
+        "Arial",
+        "Microsoft Sans Serif", # Fallback with decent Unicode
+        "DejaVu Sans",
+        "sans-serif"
+    ]
+
 
 async def _send_chunked(
     interaction: discord.Interaction, header: str, score_lines: list[str]
@@ -100,6 +122,120 @@ async def _send_chunked(
     await interaction.response.send_message(chunks[0], ephemeral=True)
     for chunk in chunks[1:]:
         await interaction.followup.send(chunk, ephemeral=True)
+
+
+def _create_attendance_heatmap(attendance_data: dict, guild_name: str, label: str) -> discord.File:
+    """Create a heatmap visualization of guild attendance data."""
+    
+    # Suppress font warnings for missing glyphs (CJK characters)
+    import warnings
+    warnings.filterwarnings("ignore", message=".*missing from font.*")
+    
+    # Set matplotlib to use fonts that support CJK characters
+    plt.rcParams['font.family'] = CANDIDATES 
+    plt.rcParams['axes.unicode_minus'] = False  # Fix minus sign display
+    
+    dates = attendance_data['dates']
+    
+    # Get all unique players 
+    all_players = set()
+    
+    # Add players who attacked this week
+    for player_name in attendance_data['players_with_scores']:
+        all_players.add(player_name)
+    
+    # Add players who didn't attack this week  
+    for player in attendance_data['players_no_attacks']:
+        all_players.add(player['player_name'])
+    
+    if not all_players:
+        raise ValueError("No attendance data to display")
+    
+    # Sort players alphabetically (case-insensitive)
+    sorted_players = sorted(list(all_players), key=lambda x: x.lower())
+    
+    # Create attendance matrix
+    player_attendance = {}
+    
+    # Initialize all players with perfect attendance first
+    for player_name in attendance_data['players_with_scores']:
+        player_attendance[player_name] = [1] * 7  # Assume perfect attendance
+    
+    # Mark missing days for players who attacked but missed some days
+    for player_data in attendance_data['players_missing_days']:
+        player_name = player_data['player_name']
+        if player_name in player_attendance:
+            # Mark missed days as 0
+            for missed_date in player_data['missed_days']:
+                if missed_date in dates:
+                    day_index = dates.index(missed_date)
+                    player_attendance[player_name][day_index] = 0
+    
+    # Add players who didn't attack at all this week
+    for player in attendance_data['players_no_attacks']:
+        player_name = player['player_name']
+        player_attendance[player_name] = [0] * 7  # No attacks all week
+    
+    # Build the final data matrix
+    data_matrix = []
+    for player in sorted_players:
+        if player in player_attendance:
+            data_matrix.append(player_attendance[player])
+        else:
+            # Default to no attacks if somehow missing
+            data_matrix.append([0] * 7)
+    
+    # Convert to numpy array
+    data = np.array(data_matrix)
+    
+    # Create the heatmap
+    fig_width = max(8, min(15, len(sorted_players) * 0.5))
+    fig, ax = plt.subplots(figsize=(8, fig_width))
+    
+    # Create heatmap with custom colors - red for missed, green for attacked
+    colors = ['#ff6b6b', '#51cf66']  # Red for no attack, Green for attack
+    im = ax.imshow(data, cmap=mcolors.ListedColormap(colors), aspect='auto')
+    
+    # Set ticks and labels
+    day_labels = [datetime.strptime(date, '%d_%m_%Y').strftime('%a') for date in dates]
+    ax.set_xticks(range(7))
+    ax.set_xticklabels(day_labels, fontsize=10)
+    ax.set_yticks(range(len(sorted_players)))
+    ax.set_yticklabels(sorted_players, fontsize=9)
+    
+    # Move x-axis to the top
+    ax.xaxis.tick_top()
+    ax.xaxis.set_label_position('top')
+    
+    # Add grid
+    ax.set_xticks(np.arange(-.5, 7, 1), minor=True)
+    ax.set_yticks(np.arange(-.5, len(sorted_players), 1), minor=True)
+    ax.grid(which='minor', color='gray', linestyle='-', linewidth=0.5)
+    
+    # Set title and labels
+    ax.set_title(f'{guild_name} - Boss attack attendance {label}', fontsize=14, fontweight='bold', pad=20)
+    ax.set_xlabel('Day of Week', fontsize=12)
+    ax.set_ylabel('Players', fontsize=12)
+    
+    # Add legend
+    legend_elements = [
+        patches.Patch(color='#ff6b6b', label='No Attack'),
+        patches.Patch(color='#51cf66', label='Attacked')
+    ]
+    ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.05, 1))
+    
+    # Adjust layout to prevent legend cutoff
+    plt.tight_layout()
+    
+    # Save to BytesIO
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+    buffer.seek(0)
+    plt.close(fig)
+    
+    # Create discord file
+    filename = f"attendance_heatmap_{guild_name.replace(' ', '_')}.png"
+    return discord.File(buffer, filename=filename)
 
 
 def _create_csv_file(data: list[dict], filename: str) -> discord.File:
@@ -119,7 +255,34 @@ class ScoresCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    async def _get_guild_name_from_user_submissions(self, interaction: discord.Interaction) -> str | None:
+        """Get the guild name from the user's submission history."""
+        user_id = str(interaction.user.id)
+        
+        # Try to get guild from user's submissions
+        from src.database import _connect
+        with _connect() as con:
+            # Get the most recent scan by this user and find the guild
+            scan_row = con.execute("""
+                SELECT guild_id FROM mi_scores ms
+                JOIN mi_scans scan ON scan.id = ms.scan_id
+                WHERE scan.submitted_by = ?
+                ORDER BY scan.scanned_at DESC
+                LIMIT 1
+            """, (user_id,)).fetchone()
+            
+            if scan_row and scan_row["guild_id"]:
+                guild_row = con.execute(
+                    "SELECT name FROM game_guilds WHERE id = ?", (scan_row["guild_id"],)
+                ).fetchone()
+                if guild_row:
+                    return guild_row["name"]
+        
+        # Fallback to registered player method
+        return await self._get_guild_name(interaction)
+
     async def _get_guild_name(self, interaction: discord.Interaction) -> str | None:
+        """Get guild name from registered player data."""
         player = get_player_by_discord_id(str(interaction.user.id))
         if not player:
             await interaction.response.send_message(
@@ -645,6 +808,130 @@ class ScoresCog(commands.Cog):
                 await interaction.response.send_message(
                     f"📊 **{player_name}** — {label}\n" + "\n".join(lines), ephemeral=True
                 )
+
+    # ── /guild-attendance ──────────────────────────────────────────────────────
+    
+    @app_commands.command(name="guild-attendance", description="Show who didn't attack this week and which days they missed")
+    @app_commands.describe(
+        day="Day of the current month whose week to show (default: current week)",
+        format="Output format: message, CSV file, or heat chart (default: message)",
+    )
+    @app_commands.choices(
+        format=[
+            app_commands.Choice(name="Message", value="message"),
+            app_commands.Choice(name="CSV File", value="csv"),
+            app_commands.Choice(name="Heat Chart", value="heatmap"),
+        ]
+    )
+    async def guild_attendance(self, interaction: discord.Interaction, day: int | None = None, format: str = "message"):
+        """Standalone attendance command - same functionality as guild-scores attendance"""
+        guild_name = await self._get_guild_name_from_user_submissions(interaction)
+        if guild_name is None:
+            return
+        
+        now = datetime.now()
+        if day is not None:
+            try:
+                ref_date = now.replace(day=day)
+            except ValueError:
+                await interaction.response.send_message(
+                    f"Invalid day **{day}** for the current month.", ephemeral=True
+                )
+                return
+        else:
+            ref_date = now
+        
+        label = ref_date.strftime("week of %d %b %Y")
+        attendance_data = get_guild_weekly_attendance(guild_name, ref_date)
+        
+        if format == "csv":
+            # Create CSV data
+            csv_data = []
+            
+            # Sort players alphabetically (case-insensitive)
+            players_no_attacks = sorted(attendance_data['players_no_attacks'], key=lambda x: x['username'].lower())
+            players_missing_days = sorted(attendance_data['players_missing_days'], key=lambda x: x['player_name'].lower())
+            
+            # Add players who didn't attack at all
+            for player in players_no_attacks:
+                csv_data.append({
+                    "Player": player['username'],
+                    "Status": "No attacks",
+                    "Days_Missed": "All 7 days",
+                    "Days_Attacked": 0
+                })
+            
+            # Add players who attacked but missed some days
+            for player in players_missing_days:
+                missed_dates = [datetime.strptime(d, '%d_%m_%Y').strftime('%a %d') for d in player['missed_days']]
+                csv_data.append({
+                    "Player": player['player_name'],
+                    "Status": "Partial attendance",
+                    "Days_Missed": ", ".join(missed_dates) if missed_dates else "None",
+                    "Days_Attacked": player['attacked_days']
+                })
+            
+            if not csv_data:
+                await interaction.response.send_message(
+                    f"🎉 Perfect attendance! All guild members attacked every day during the {label}.",
+                    ephemeral=True
+                )
+                return
+            
+            filename = f"guild_attendance_{ref_date.strftime('%Y_%m_%d')}.csv"
+            csv_file = _create_csv_file(csv_data, filename)
+            await interaction.response.send_message(
+                f"📊 **{guild_name}** attendance for {label}",
+                file=csv_file,
+                ephemeral=True
+            )
+        elif format == "heatmap":
+            # Heat chart format
+            try:
+                heatmap_file = _create_attendance_heatmap(attendance_data, guild_name, label)
+                await interaction.response.send_message(
+                    f"📊 **{guild_name}** Boss hit heatmap for {label}",
+                    file=heatmap_file,
+                    ephemeral=False
+                )
+            except ValueError as e:
+                await interaction.response.send_message(
+                    f"Unable to create heatmap: {str(e)}",
+                    ephemeral=True
+                )
+        else:
+            # Message format
+            lines = []
+            
+            # Sort players alphabetically (case-insensitive)
+            players_no_attacks = sorted(attendance_data['players_no_attacks'], key=lambda x: x['username'].lower())
+            players_missing_days = sorted(attendance_data['players_missing_days'], key=lambda x: x['player_name'].lower())
+            
+            # Players who didn't attack at all this week
+            if players_no_attacks:
+                lines.append("❌ **No attacks this week:**")
+                for player in players_no_attacks:
+                    lines.append(f"  • {player['username']}")
+                lines.append("")
+            
+            # Players who attacked but missed some days
+            if players_missing_days:
+                lines.append("⚠️ **Missed some days:**")
+                for player in players_missing_days:
+                    missed_days = [datetime.strptime(d, '%d_%m_%Y').strftime('%a %d') for d in player['missed_days']]
+                    missed_str = ", ".join(missed_days)
+                    lines.append(f"  • **{player['player_name']}** missed: {missed_str} ({player['attacked_days']}/7 days)")
+                lines.append("")
+            
+            if not lines:
+                await interaction.response.send_message(
+                    f"🎉 **{guild_name}** — Perfect attendance for {label}!\\nAll registered guild members attacked every day.",
+                    ephemeral=True
+                )
+                return
+            
+            header = f"📊 **{guild_name}** — Attendance for {label}"
+            await _send_chunked(interaction, header, lines)
 
 
 async def setup(bot: commands.Bot):

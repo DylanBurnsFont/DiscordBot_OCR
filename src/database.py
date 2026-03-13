@@ -688,3 +688,83 @@ def get_guild_streaks(guild_name: str) -> list[dict]:
         })
 
     return sorted(results, key=lambda r: r["streak"], reverse=True)
+
+
+def get_guild_weekly_attendance(guild_name: str, ref_date: datetime | None = None) -> dict:
+    """
+    Returns weekly attendance information for all players who appear in scores for a guild.
+    Shows who missed which days based on actual score submissions.
+    
+    Returns dict:
+    - 'dates': list of DD_MM_YYYY date strings for the week
+    - 'all_players': list of all unique player names who scored during the week
+    - 'players_missing_days': list of dicts with player info and missing days
+    - 'players_no_attacks': list of players from previous weeks who didn't attack this week
+    """
+    dates = _week_dates(ref_date)
+    with _connect() as con:
+        guild_row = con.execute(
+            "SELECT id FROM game_guilds WHERE name = ?", (guild_name,)
+        ).fetchone()
+        if guild_row is None:
+            return {
+                'dates': dates,
+                'all_players': [],
+                'players_missing_days': [],
+                'players_no_attacks': []
+            }
+        guild_id = guild_row["id"]
+
+        # Get scores for this week
+        placeholders = ",".join("?" * len(dates))
+        score_rows = con.execute(f"""
+            SELECT player_name, scan_date, score
+            FROM mi_scores
+            WHERE guild_id = ?
+              AND scan_date IN ({placeholders})
+            ORDER BY player_name, scan_date
+        """, [guild_id] + dates).fetchall()
+
+        # Get all players who have ever scored for this guild (for "no attacks" comparison)
+        all_time_players = con.execute("""
+            SELECT DISTINCT player_name
+            FROM mi_scores
+            WHERE guild_id = ?
+            ORDER BY player_name
+        """, (guild_id,)).fetchall()
+
+    # Build player score data for this week
+    weekly_players: dict[str, dict] = {}
+    for row in score_rows:
+        name = row["player_name"]
+        if name not in weekly_players:
+            weekly_players[name] = {"player_name": name, "attacked_days": set()}
+        weekly_players[name]["attacked_days"].add(row["scan_date"])
+
+    # Identify missing days for each player who attacked this week
+    players_missing_days = []
+    for name, data in weekly_players.items():
+        attacked = data["attacked_days"]
+        missed = [d for d in dates if d not in attacked]
+        if missed:  # Only include if they missed some days
+            players_missing_days.append({
+                "player_name": name,
+                "missed_days": missed,
+                "attacked_days": len(attacked)
+            })
+    
+    # Players who scored in previous periods but not this week
+    all_time_names = {row["player_name"] for row in all_time_players}
+    weekly_names = set(weekly_players.keys())
+    players_no_attacks = [
+        {"player_name": name}
+        for name in all_time_names
+        if name not in weekly_names
+    ]
+    
+    return {
+        'dates': dates,
+        'players_with_scores': list(weekly_names),
+        'players_missing_days': players_missing_days,
+        'players_no_attacks': [{"username": p["player_name"], "player_name": p["player_name"]} for p in players_no_attacks]
+    }

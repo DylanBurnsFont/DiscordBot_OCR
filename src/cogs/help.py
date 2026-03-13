@@ -35,6 +35,21 @@ HELP_EMBED.add_field(
     inline=False,
 )
 HELP_EMBED.add_field(
+    name="📊 Score Tracking",
+    value=(
+        "`/guild-scores today` — See today's scores for your guild.\n"
+        "`/guild-scores week` — See weekly scores for your guild.\n"
+        "`/guild-scores month` — See monthly scores for your guild.\n"
+        "`/guild-scores attendance` — See who didn't attack this week and which days they missed (supports heat chart).\n"
+        "`/guild-attendance` — Same as above, standalone command with heat chart visualization.\n"
+        "`/user-score today` — See your score for today.\n"
+        "`/user-score week` — See your weekly scores.\n"
+        "`/user-score month` — See your monthly scores.\n"
+        "\n**Note:** Attendance tracking shows all players who have ever scored for your guild."
+    ),
+    inline=False,
+)
+HELP_EMBED.add_field(
     name="🛠️ Other",
     value=(
         "`/ping` — Check that the bot is online.\n"
