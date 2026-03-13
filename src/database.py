@@ -311,13 +311,14 @@ def get_today_score(player_name: str) -> sqlite3.Row | None:
         ).fetchone()
 
 
-def get_today_guild_scores(guild_name: str) -> list[dict]:
+def get_today_guild_scores(guild_name: str, date: str | None = None) -> list[dict]:
     """
-    All scores recorded today for the given guild, sorted by rank.
+    All scores recorded on the given date for the given guild, sorted by rank.
+    date should be in DD_MM_YYYY format; defaults to today if omitted.
     Includes both registered and unregistered players detected by OCR.
     Each dict contains: rank, player_name, score, player_id (None if unregistered).
     """
-    today = datetime.now().strftime("%d_%m_%Y")
+    scan_date = date if date else datetime.now().strftime("%d_%m_%Y")
     with _connect() as con:
         guild_row = con.execute(
             "SELECT id FROM game_guilds WHERE name = ?", (guild_name,)
@@ -330,7 +331,7 @@ def get_today_guild_scores(guild_name: str) -> list[dict]:
             FROM mi_scores
             WHERE guild_id = ? AND scan_date = ?
             ORDER BY rank ASC
-        """, (guild_row["id"], today)).fetchall()
+        """, (guild_row["id"], scan_date)).fetchall()
 
     return [dict(row) for row in rows]
 
