@@ -19,6 +19,7 @@ EXTENSIONS = [
     "src.cogs.streak",
     "src.cogs.help",
     "src.cogs.scores",
+    "src.cogs.report",
 ]
 
 
@@ -52,9 +53,9 @@ class DiscordBot(commands.Bot):
         print(f"Logged in as {self.user} (app_id={self.application_id})")
         guild_id = os.getenv("DISCORD_GUILD_ID")
         if guild_id:
-            guild = discord.Object(id=int(guild_id))
-            self.tree.copy_global_to(guild=guild)
-            guild_synced = await self.tree.sync(guild=guild)
+            discord_guild = discord.Object(id=int(guild_id))
+            self.tree.copy_global_to(guild=discord_guild)
+            guild_synced = await self.tree.sync(guild=discord_guild)
             print(f"Guild sync: {len(guild_synced)} command(s) synced to guild {guild_id}")
         else:
             synced = await self.tree.sync()

@@ -5,3 +5,4 @@ images/
 *copy.py
 testDB.py
 *.json
+src/__pycache__/

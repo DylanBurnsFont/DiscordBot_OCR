@@ -24,6 +24,7 @@ def _is_unlimited_user(interaction: discord.Interaction) -> bool:
     owner_id = os.getenv("DISCORD_OWNER_ID", "")
     if owner_id and str(interaction.user.id) == owner_id:
         return True
+        # return False
     unlimited_ids = {
         rid.strip()
         for rid in os.getenv("MI_UNLIMITED_ROLE_IDS", "").split(",")
@@ -31,6 +32,7 @@ def _is_unlimited_user(interaction: discord.Interaction) -> bool:
     }
     if unlimited_ids and isinstance(interaction.user, discord.Member):
         return any(str(role.id) in unlimited_ids for role in interaction.user.roles)
+        # return False
     return False
 
 
@@ -66,7 +68,7 @@ class MICog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    async def _run_ocr_for_attachments(self, interaction, attachments):
+    async def _run_ocr_for_attachments(self, interaction, attachments, note: str = ""):
         image_attachments = [att for att in attachments if att and _is_image_filename(att.filename)]
         if not image_attachments:
             await interaction.edit_original_response(content="Please provide at least one image attachment.")
@@ -97,9 +99,10 @@ class MICog(commands.Cog):
             inserted, updated = save_scores(scan_id, scores, guild_id=guild_id)
             print(f"Scan {scan_id}: {inserted} inserted, {updated} updated in DB")
 
-            await interaction.edit_original_response(
-                content=f"✅ Done! Found **{len(scores)}** player(s) — {inserted} new, {updated} updated."
-            )
+            result_msg = f"✅ Done! Found **{len(scores)}** player(s) — {inserted} new, {updated} updated."
+            if note:
+                result_msg = f"{note}\n{result_msg}"
+            await interaction.edit_original_response(content=result_msg)
 
         except Exception as exc:
             print(f"/mi failed: {exc}")
@@ -132,7 +135,7 @@ class MICog(commands.Cog):
             [image1, image2, image3, image4, image5],
         )
 
-    async def _mi_checks_and_run(self, interaction: discord.Interaction, attachments: list):
+    async def _mi_checks_and_run(self, interaction: discord.Interaction, attachments: list, note: str = ""):
         """Shared pre-flight checks (registration, daily limit, duplicate) then runs OCR."""
         player = get_player_by_discord_id(str(interaction.user.id))
         if not player:
@@ -166,7 +169,7 @@ class MICog(commands.Cog):
 
         await interaction.response.defer(thinking=True)
         await interaction.edit_original_response(content="Processing OCR...")
-        await self._run_ocr_for_attachments(interaction, attachments)
+        await self._run_ocr_for_attachments(interaction, attachments, note=note)
 
 
 @app_commands.context_menu(name="Process MI")
@@ -183,7 +186,13 @@ async def mi_context_menu(interaction: discord.Interaction, message: discord.Mes
             ephemeral=True,
         )
         return
-    await cog._mi_checks_and_run(interaction, image_attachments)
+
+    note = ""
+    if not _is_unlimited_user(interaction) and len(image_attachments) > DAILY_SCAN_LIMIT:
+        image_attachments = image_attachments[:DAILY_SCAN_LIMIT]
+        note = f"-# Only **{DAILY_SCAN_LIMIT}** image(s) can be processed per day — extra images were ignored."
+
+    await cog._mi_checks_and_run(interaction, image_attachments, note=note)
 
 
 async def setup(bot: commands.Bot):
