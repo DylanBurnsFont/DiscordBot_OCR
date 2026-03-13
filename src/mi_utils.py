@@ -127,8 +127,25 @@ def write_scores_chart(scores, out_file):
 _SCORE_RE = re.compile(r'^\d+(\.\d+)?[KMBTkmbt]$')
 
 
+def _correct_and_validate_score(s: str) -> tuple[bool, str]:
+    """
+    Correct common OCR errors in score strings and validate them.
+    Returns (is_valid, corrected_string).
+    """
+    corrected = s
+    if s and s[-1] == "3":
+        corrected = s[:-1] + "B"
+    elif s and s[-1] == "7":
+        corrected = s[:-1] + "T"
+    
+    is_valid = bool(_SCORE_RE.match(corrected))
+    return is_valid, corrected
+
+
 def _is_valid_score(s: str) -> bool:
-    return bool(_SCORE_RE.match(s))
+    """Check if a score string is valid (with OCR error correction)."""
+    is_valid, _ = _correct_and_validate_score(s)
+    return is_valid
 
 
 def _is_valid_name(s: str) -> bool:
@@ -150,15 +167,14 @@ def parseResults(results):
     top3 = dets[:6]
     # Get rid of top3 from general results
     dets = dets[6:]
-    MI_SCORES[top3[0]] = top3[3]
-    MI_SCORES[top3[1]] = top3[4]
-    MI_SCORES[top3[2]] = top3[5]
+    # Process top-3 scores with OCR correction
+    top3_pairs = [(top3[0], top3[3]), (top3[1], top3[4]), (top3[2], top3[5])]
+    for name, score in top3_pairs:
+        is_valid, corrected_score = _correct_and_validate_score(score)
+        if is_valid:
+            MI_SCORES[name] = corrected_score
 
-    # Remove top-3 entries with invalid scores
-    for name in [top3[0], top3[1], top3[2]]:
-        if name in MI_SCORES and not _is_valid_score(MI_SCORES[name]):
-            del MI_SCORES[name]
-
+    print(dets)
     # Get rid of the position of each player
     dets = [item for item in dets if not item.isdigit()]
 
@@ -169,9 +185,13 @@ def parseResults(results):
     while i < len(dets) - 1:
         name = dets[i]
         score = dets[i + 1]
-        if _is_valid_name(name) and _is_valid_score(score):
-            MI_SCORES[name] = score
-            i += 2
+        if _is_valid_name(name):
+            is_valid, corrected_score = _correct_and_validate_score(score)
+            if is_valid:
+                MI_SCORES[name] = corrected_score
+                i += 2
+            else:
+                i += 1
         else:
             i += 1
 
