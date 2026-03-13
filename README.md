@@ -23,3 +23,4 @@ Reads MI scores
 - [ ] When displaying scores, add a normalization parameter to account for different power guilds
 - [ ] Damage evolution over the weeks to track progress.
 - [x] Add timed message after reset with the previous day's scores and @ someone
+- [ ] Make the timed messages explicit to a certain person and to their assigned guild. (Pokoko, hubba) at the moment.
