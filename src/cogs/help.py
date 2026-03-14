@@ -42,10 +42,12 @@ HELP_EMBED.add_field(
         "`/guild-scores month` — See monthly scores for your guild.\n"
         "`/guild-scores attendance` — See who didn't attack this week and which days they missed (supports heat chart).\n"
         "`/guild-attendance` — Same as above, standalone command with heat chart visualization.\n"
+        "`/guild-damage-report` — Generate weekly damage heatmap showing daily scores with color-coded visualization.\n"
+        "`/manual-report [guild]` — Manually trigger a damage heatmap report.\n"
         "`/user-score today` — See your score for today.\n"
         "`/user-score week` — See your weekly scores.\n"
         "`/user-score month` — See your monthly scores.\n"
-        "\n**Note:** Attendance tracking shows all players who have ever scored for your guild."
+        "\n**Note:** Attendance tracking shows all players who have ever scored for your guild. Damage reports are automatically sent daily."
     ),
     inline=False,
 )
@@ -55,6 +57,13 @@ HELP_EMBED.add_field(
         "`/ping` — Check that the bot is online.\n"
         "`/help` — Show this message.\n"
         "For questions, feedback or issues, contact **coomer314** on the Empire Discord server."
+    ),
+    inline=False,
+)
+HELP_EMBED.add_field(
+    name="👑 Admin Commands",
+    value=(
+        "`/guild-status` — Show multi-guild configuration status (requires admin permissions)."
     ),
     inline=False,
 )
