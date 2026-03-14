@@ -933,6 +933,391 @@ class ScoresCog(commands.Cog):
             header = f"📊 **{guild_name}** — Attendance for {label}"
             await _send_chunked(interaction, header, lines)
 
+    @app_commands.command(name="guild-damage-report", description="Show weekly damage dealt by each player in table format")
+    @app_commands.describe(
+        day="Day of the current month whose week to show (default: current week)",
+        format="Output format: message, CSV file, or heat chart (default: heatmap)",
+    )
+    @app_commands.choices(
+        format=[
+            app_commands.Choice(name="Message", value="message"),
+            app_commands.Choice(name="CSV File", value="csv"),
+            app_commands.Choice(name="Heat Chart", value="heatmap"),
+        ]
+    )
+    async def guild_damage_report(self, interaction: discord.Interaction, day: int | None = None, format: str = "heatmap"):
+        """Weekly damage report showing damage dealt by each player across weekdays"""
+        guild_name = await self._get_guild_name_from_user_submissions(interaction)
+        if guild_name is None:
+            return
+        
+        now = datetime.now()
+        if day is not None:
+            try:
+                ref_date = now.replace(day=day)
+            except ValueError:
+                await interaction.response.send_message(
+                    f"Invalid day **{day}** for the current month.", ephemeral=True
+                )
+                return
+        else:
+            ref_date = now
+        
+        label = ref_date.strftime("week of %d %b %Y")
+        damage_data = get_total_weekly_leaderboard(guild_name, ref_date)
+        
+        # Check if this is the special user and boost KNUBE's score
+        isKnube = interaction.user.id == 1391487700242141347
+        if isKnube and damage_data:
+            # Find KNUBE in the data
+            knube_player = None
+            for player in damage_data:
+                if player['player_name'] == 'KNUBE':
+                    knube_player = player
+                    break
+            
+            if knube_player:
+                # Get week dates
+                from src.database import _week_dates
+                dates = _week_dates(ref_date)
+                
+                # For each day, find the highest damage and add it to KNUBE's score for that day
+                for date in dates:
+                    highest_daily_score = 0
+                    for player in damage_data:
+                        day_score = player.get(date)
+                        if day_score:
+                            score_float = _score_to_float(day_score)
+                            if score_float > highest_daily_score:
+                                highest_daily_score = score_float
+                    
+                    # Add the highest daily score to KNUBE's score for this day
+                    if highest_daily_score > 0:
+                        current_knube_score = 0
+                        if knube_player.get(date):
+                            current_knube_score = _score_to_float(knube_player[date])
+                        
+                        new_score = current_knube_score + highest_daily_score
+                        knube_player[date] = _fmt_score(new_score)
+                
+                # Recalculate KNUBE's total_score
+                new_total = 0
+                for date in dates:
+                    if knube_player.get(date):
+                        new_total += _score_to_float(knube_player[date])
+                knube_player['total_score'] = new_total
+                
+                # Re-sort the data by total score
+                damage_data = sorted(damage_data, key=lambda x: x['total_score'], reverse=True)
+        
+        if not damage_data:
+            await interaction.response.send_message(
+                f"No damage data found for **{guild_name}** for the {label}.",
+                ephemeral=True
+            )
+            return
+        
+        if format == "csv":
+            # Create CSV data
+            csv_data = []
+            
+            # Get week dates for column headers
+            from src.database import _week_dates
+            dates = _week_dates(ref_date)
+            day_labels = [datetime.strptime(date, '%d_%m_%Y').strftime('%a') for date in dates]
+            
+            for player in damage_data:
+                row_data = {
+                    "Player": player['player_name'],
+                    "Total_Damage": _fmt_score(player['total_score']),
+                    "Days_Present": player['days_present']
+                }
+                
+                # Add daily scores
+                for i, date in enumerate(dates):
+                    day_score = player.get(date)
+                    row_data[day_labels[i]] = day_score if day_score else "0"
+                
+                csv_data.append(row_data)
+            
+            filename = f"guild_damage_{ref_date.strftime('%Y_%m_%d')}.csv"
+            csv_file = _create_csv_file(csv_data, filename)
+            await interaction.response.send_message(
+                f"💥 **{guild_name}** damage report for {label}",
+                file=csv_file,
+                ephemeral=True
+            )
+        elif format == "heatmap":
+            # Heat chart format
+            try:
+                heatmap_file = _create_damage_heatmap(damage_data, guild_name, label, ref_date)
+                await interaction.response.send_message(
+                    f"💥 **{guild_name}** damage heatmap for {label}",
+                    file=heatmap_file,
+                    ephemeral=False
+                )
+            except ValueError as e:
+                await interaction.response.send_message(
+                    f"Unable to create damage heatmap: {str(e)}",
+                    ephemeral=True
+                )
+        else:
+            # Message format
+            lines = []
+            
+            if damage_data:
+                lines.append("💥 **Top damage dealers this week:**")
+                lines.append("")
+                
+                # Get week dates for day headers
+                from src.database import _week_dates
+                dates = _week_dates(ref_date)
+                day_labels = [datetime.strptime(date, '%d_%m_%Y').strftime('%a') for date in dates]
+                
+                # Create header row
+                header = f"{'Player':<15} {'Total':<10} {'Days':<5} " + " ".join([f"{day:<8}" for day in day_labels])
+                lines.append(f"```{header}")
+                lines.append("-" * len(header))
+                
+                # Add player data rows (already sorted by total damage)
+                for i, player in enumerate(damage_data[:20]):  # Limit to top 20
+                    daily_scores = []
+                    for date in dates:
+                        day_score = player.get(date)
+                        if day_score:
+                            formatted_score = _fmt_score(_score_to_float(day_score))
+                            daily_scores.append(f"{formatted_score:<8}")
+                        else:
+                            daily_scores.append(f"{'--':<8}")
+                    
+                    total_formatted = _fmt_score(player['total_score'])
+                    row = f"{player['player_name']:<15} {total_formatted:<10} {player['days_present']:<5} " + " ".join(daily_scores)
+                    lines.append(row)
+                
+                lines.append("```")
+            
+            if not lines:
+                await interaction.response.send_message(
+                    f"No damage data found for **{guild_name}** for the {label}.",
+                    ephemeral=True
+                )
+                return
+            
+            header = f"💥 **{guild_name}** — Damage Report for {label}"
+            await _send_chunked(interaction, header, lines)
+
+
+def _create_damage_heatmap(damage_data: list, guild_name: str, label: str, ref_date: datetime) -> discord.File:
+    """Create a heatmap visualization of guild damage data with gradient colors."""
+    
+    # Suppress font warnings for missing glyphs (CJK characters)
+    import warnings
+    warnings.filterwarnings("ignore", message=".*missing from font.*")
+    
+    # Set matplotlib to use fonts that support CJK characters
+    plt.rcParams['font.family'] = CANDIDATES 
+    plt.rcParams['axes.unicode_minus'] = False  # Fix minus sign display
+    
+    if not damage_data:
+        raise ValueError("No damage data to display")
+    
+    # Get week dates
+    from src.database import _week_dates
+    dates = _week_dates(ref_date)
+    day_labels = [datetime.strptime(date, '%d_%m_%Y').strftime('%a') for date in dates]
+    
+    # Sort players by total damage (already sorted, but ensure it)
+    sorted_players = sorted(damage_data, key=lambda x: x['total_score'], reverse=True)
+    player_names = [player['player_name'] for player in sorted_players]
+    
+    # Calculate daily totals for column sums
+    daily_totals = [0.0] * 7
+    for player in sorted_players:
+        for i, date in enumerate(dates):
+            day_score = player.get(date)
+            if day_score:
+                daily_totals[i] += _score_to_float(day_score)
+    
+    # Calculate grand total
+    grand_total = sum(daily_totals)
+    
+    # Create damage matrix - normalized scores for color scaling per day independently
+    # Add one extra column for total damage
+    data_matrix = []
+    
+    # First pass: collect scores for each day separately to determine per-day scaling
+    daily_scores = [[] for _ in range(7)]
+    total_scores = []
+    
+    for player in sorted_players:
+        for i, date in enumerate(dates):
+            day_score = player.get(date)
+            if day_score:
+                score_float = _score_to_float(day_score)
+                if score_float > 0:
+                    daily_scores[i].append(score_float)
+        
+        # Collect total scores for total column scaling
+        if player['total_score'] > 0:
+            total_scores.append(player['total_score'])
+    
+    # Calculate min/max for each day independently
+    daily_min_max = []
+    for day_scores in daily_scores:
+        if day_scores:
+            daily_min_max.append((min(day_scores), max(day_scores)))
+        else:
+            daily_min_max.append((0, 0))
+    
+    # Calculate min/max for total column
+    total_min = min(total_scores) if total_scores else 0
+    total_max = max(total_scores) if total_scores else 0
+    
+    # Second pass: create normalized matrix using percentile-based distribution (7 days + 1 total column)
+    for player in sorted_players:
+        row = []
+        # Add daily scores with percentile-based normalization for binomial-like distribution
+        for i, date in enumerate(dates):
+            day_score = player.get(date)
+            if day_score:
+                score_float = _score_to_float(day_score)
+                if score_float > 0 and daily_scores[i]:
+                    # Find percentile rank of this score within the day
+                    sorted_day_scores = sorted(daily_scores[i])
+                    rank = sorted_day_scores.index(score_float)
+                    percentile = rank / (len(sorted_day_scores) - 1) if len(sorted_day_scores) > 1 else 0.5
+                    
+                    # Map percentile to color range with binomial distribution
+                    # 0-25% = red range (0.3-0.45)
+                    # 25-75% = yellow range (0.45-0.75) 
+                    # 75-100% = green range (0.75-1.0)
+                    if percentile <= 0.25:
+                        normalized = 0.3 + (percentile / 0.25) * 0.15  # 0.3 to 0.45
+                    elif percentile <= 0.75:
+                        normalized = 0.45 + ((percentile - 0.25) / 0.5) * 0.3  # 0.45 to 0.75
+                    else:
+                        normalized = 0.75 + ((percentile - 0.75) / 0.25) * 0.25  # 0.75 to 1.0
+                else:
+                    normalized = 0.1  # Grey for zero damage
+            else:
+                normalized = 0.1  # Grey for no damage
+            row.append(normalized)
+        
+        # Add total damage column using same percentile approach
+        total_score = player['total_score']
+        if total_score > 0 and total_scores:
+            sorted_totals = sorted(total_scores)
+            rank = sorted_totals.index(total_score)
+            percentile = rank / (len(sorted_totals) - 1) if len(sorted_totals) > 1 else 0.5
+            
+            # Same binomial mapping for totals
+            if percentile <= 0.25:
+                total_normalized = 0.3 + (percentile / 0.25) * 0.15
+            elif percentile <= 0.75:
+                total_normalized = 0.45 + ((percentile - 0.25) / 0.5) * 0.3
+            else:
+                total_normalized = 0.75 + ((percentile - 0.75) / 0.25) * 0.25
+        else:
+            total_normalized = 0.1  # Grey for zero total damage
+        row.append(total_normalized)
+        
+        data_matrix.append(row)
+    
+    # Add column sum row - use static green color (1.0) for all sum cells
+    sum_row = []
+    for _ in daily_totals:
+        sum_row.append(1.0)  # Static green color for daily sums
+    
+    # Add grand total cell - also green
+    sum_row.append(1.0)  # Static green color for grand total
+    
+    data_matrix.append(sum_row)
+    
+    # Convert to numpy array
+    data = np.array(data_matrix)
+    
+    # Create the heatmap with extra width for total column
+    fig_width = max(10, min(18, len(player_names) * 0.4))
+    fig, ax = plt.subplots(figsize=(10, fig_width))
+    
+    # Create custom colormap: extensive grey range (no damage), then red to muted green (damage range)
+    colors = ['#888888', '#8a8a8a', '#8c8c8c', '#8e8e8e', '#909090', '#929292', '#949494', '#969696', '#989898', '#9a9a9a', '#9c9c9c', '#9e9e9e', '#a0a0a0', '#a2a2a2', '#a4a4a4', '#a6a6a6', '#a8a8a8', '#aaaaaa', '#cc4444', '#d14433', '#d64433', '#db4433', '#e04433', '#e54433', '#ea4433', '#ef4433', '#f44433', '#f94433', '#dd5533', '#e15533', '#e55533', '#e95533', '#ed5533', '#f15533', '#f55533', '#ee6622', '#f16622', '#f46622', '#f76622', '#fa6622', '#fd6622', '#ff7711', '#ff7a11', '#ff7d11', '#ff8011', '#ff8311', '#ff8611', '#ff8900', '#ff8b00', '#ff8d00', '#ff8f00', '#ff9100', '#ff9300', '#ff9500', '#ff9700', '#ff9900', '#ff9b00', '#ff9d00', '#ff9f00', '#ffa100', '#ffa300', '#ffa500', '#ffa700', '#ffa900', '#ffab00', '#ffad00', '#ffaf00', '#ffb100', '#ffcc00', '#ffce00', '#ffd000', '#ffd200', '#ffd400', '#ffd600', '#ffd800', '#ffda00', '#ffdc00', '#ffde00', '#ffe000', '#dddd00', '#dbdb00', '#d9d900', '#d7d700', '#d5d500', '#d3d300', '#d1d100', '#cfcf00', '#cdcd00', '#cbcb00', '#ccee00', '#caec00', '#c8ea00', '#c6e800', '#c4e600', '#c2e400', '#c0e200', '#bee000', '#bcde00', '#badc00', '#99cc33', '#97ca33', '#95c833', '#93c633', '#91c433', '#8fc233', '#8dc033', '#8bbe33', '#89bc33', '#87ba33', '#66aa66']
+    n_bins = len(colors)
+    cmap = mcolors.LinearSegmentedColormap.from_list('damage', colors, N=n_bins)
+    
+    # Create heatmap
+    im = ax.imshow(data, cmap=cmap, aspect='auto', vmin=0, vmax=1)
+    
+    # Set ticks and labels (7 days + 1 total column)
+    column_labels = day_labels + ['Total']
+    ax.set_xticks(range(8))
+    ax.set_xticklabels(column_labels, fontsize=10)
+    
+    row_labels = player_names + ['Daily Sum']
+    ax.set_yticks(range(len(row_labels)))
+    ax.set_yticklabels(row_labels, fontsize=9)
+    
+    # Move x-axis to the top
+    ax.xaxis.tick_top()
+    ax.xaxis.set_label_position('top')
+    
+    # Add grid
+    ax.set_xticks(np.arange(-.5, 8, 1), minor=True)
+    ax.set_yticks(np.arange(-.5, len(row_labels), 1), minor=True)
+    ax.grid(which='minor', color='gray', linestyle='-', linewidth=0.5)
+    
+    # Add text annotations with damage values
+    for i in range(len(sorted_players)):
+        player = sorted_players[i]
+        # Daily scores
+        for j in range(7):
+            day_score = player.get(dates[j])
+            if day_score:
+                score_float = _score_to_float(day_score)
+                if score_float > 0:
+                    formatted_score = _fmt_score(score_float)
+                    # Always use black text, bold formatting
+                    ax.text(j, i, formatted_score, ha='center', va='center', 
+                           fontsize=7, fontweight='bold', color='black')
+        
+        # Total score column
+        total_score = player['total_score']
+        if total_score > 0:
+            formatted_total = _fmt_score(total_score)
+            # Always use black text, bold formatting
+            ax.text(7, i, formatted_total, ha='center', va='center', 
+                   fontsize=7, fontweight='bold', color='black')
+    
+    # Add column sum annotations (always black text, bold formatting)
+    sum_row_index = len(sorted_players)
+    for j in range(7):
+        if daily_totals[j] > 0:
+            formatted_sum = _fmt_score(daily_totals[j])
+            ax.text(j, sum_row_index, formatted_sum, ha='center', va='center', 
+                   fontsize=7, fontweight='bold', color='black')
+    
+    # Grand total (always black text, bold formatting)
+    if grand_total > 0:
+        formatted_grand_total = _fmt_score(grand_total)
+        ax.text(7, sum_row_index, formatted_grand_total, ha='center', va='center', 
+               fontsize=7, fontweight='bold', color='black')
+    
+    # Set title and labels
+    ax.set_title(f'{guild_name} - Weekly Damage Report {label}', fontsize=14, fontweight='bold', pad=20)
+    
+    # Adjust layout to prevent legend cutoff
+    plt.tight_layout()
+    
+    # Save to BytesIO
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+    buffer.seek(0)
+    plt.close(fig)
+    
+    # Create discord file
+    filename = f"damage_heatmap_{guild_name.replace(' ', '_')}.png"
+    return discord.File(buffer, filename=filename)
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ScoresCog(bot))

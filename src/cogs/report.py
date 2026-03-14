@@ -8,8 +8,8 @@ from discord.ext import commands, tasks
 from src.database import get_today_guild_scores, _score_to_float
 
 GUILD_NAME = "AboveAll"
-REPORT_HOUR = 3
-REPORT_MINUTE = 0
+REPORT_HOUR = 8
+REPORT_MINUTE = 44
 REPORT_TZ = zoneinfo.ZoneInfo("Europe/Madrid")
 
 
