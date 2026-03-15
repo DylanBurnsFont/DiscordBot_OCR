@@ -216,7 +216,7 @@ def parseResults(results, guild_name=None):
     scores = [x for x in top3 if _SCORE_RE.match(x)]
     top3_pairs = zip(names, scores)
     for name, score in top3_pairs:
-        print(name, score)
+        # print(name, score)
         if not _SCORE_RE.match(name):
             corrected_name = _apply_name_corrections(name, guild_name=guild_name)
             is_valid, corrected_score = _correct_and_validate_score(score)

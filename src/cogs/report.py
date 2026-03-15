@@ -14,8 +14,8 @@ from src.cogs.scores import _create_damage_heatmap
 
 # Default configuration for backward compatibility
 DEFAULT_GUILD_NAME = "AboveAll"
-REPORT_HOUR = 2
-REPORT_MINUTE = 15
+REPORT_HOUR = 3
+REPORT_MINUTE = 00
 REPORT_TZ = zoneinfo.ZoneInfo("Europe/Madrid")
 
 # Guild configurations - can be moved to database later

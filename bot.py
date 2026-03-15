@@ -20,6 +20,7 @@ EXTENSIONS = [
     "src.cogs.help",
     "src.cogs.scores",
     "src.cogs.report",
+    "src.cogs.setscore",
 ]
 
 
