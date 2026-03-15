@@ -34,20 +34,45 @@ def _configure_chart_font():
 _configure_chart_font()
 
 # Load name corrections
-_NAME_CORRECTIONS = {}
-try:
-    corrections_path = os.path.join(os.path.dirname(__file__), '..', 'corrections', 'corrections.json')
-    with open(corrections_path, 'r', encoding='utf-8') as f:
-        _NAME_CORRECTIONS = json.load(f)
-except FileNotFoundError:
-    print("❌ No corrections.json file found - name corrections disabled")
-except Exception as e:
-    print(f"❌ Error loading corrections.json: {e}")
+# Cache for guild-specific corrections
+_GUILD_CORRECTIONS_CACHE = {}
 
+def _load_guild_corrections(guild_name: str) -> dict[str, str]:
+    """Load corrections for a specific guild."""
+    if guild_name in _GUILD_CORRECTIONS_CACHE:
+        return _GUILD_CORRECTIONS_CACHE[guild_name]
+    
+    corrections = {}
+    try:
+        # Try guild-specific corrections file first
+        guild_corrections_path = os.path.join(os.path.dirname(__file__), '..', 'corrections', f'{guild_name}.json')
+        with open(guild_corrections_path, 'r', encoding='utf-8') as f:
+            corrections = json.load(f)
+            print(f"✅ Loaded {len(corrections)} corrections for guild: {guild_name}")
+    except FileNotFoundError:
+        # Fallback to general corrections.json
+        try:
+            general_corrections_path = os.path.join(os.path.dirname(__file__), '..', 'corrections', 'corrections.json')
+            with open(general_corrections_path, 'r', encoding='utf-8') as f:
+                corrections = json.load(f)
+                print(f"⚠️ No guild-specific corrections found for {guild_name}, using general corrections.json")
+        except FileNotFoundError:
+            print(f"❌ No corrections file found for guild {guild_name} - name corrections disabled")
+        except Exception as e:
+            print(f"❌ Error loading general corrections.json: {e}")
+    except Exception as e:
+        print(f"❌ Error loading guild corrections for {guild_name}: {e}")
+    
+    _GUILD_CORRECTIONS_CACHE[guild_name] = corrections
+    return corrections
 
-def _apply_name_corrections(name: str) -> str:
-    """Apply OCR name corrections from corrections.json."""
-    corrected_name = _NAME_CORRECTIONS.get(name, name)
+def _apply_name_corrections(name: str, guild_name: str = None) -> str:
+    """Apply OCR name corrections based on guild-specific corrections."""
+    if not guild_name:
+        return name
+    
+    corrections = _load_guild_corrections(guild_name)
+    corrected_name = corrections.get(name, name)
     return corrected_name
 
 
@@ -171,7 +196,7 @@ def _is_valid_name(s: str) -> bool:
     return len(s) >= 2 and not _is_valid_score(s)
 
 
-def parseResults(results):
+def parseResults(results, guild_name=None):
     MI_SCORES = {}
     removeString = ["zzz", "Zzz", "ZZz", "ZZZ", "zzZ", "zZz", "Zzz", "zzZ", "ZZz", "ZZZ"]
 
@@ -193,7 +218,7 @@ def parseResults(results):
     for name, score in top3_pairs:
         print(name, score)
         if not _SCORE_RE.match(name):
-            corrected_name = _apply_name_corrections(name)
+            corrected_name = _apply_name_corrections(name, guild_name=guild_name)
             is_valid, corrected_score = _correct_and_validate_score(score)
             if is_valid:
                 MI_SCORES[corrected_name] = corrected_score
@@ -209,7 +234,7 @@ def parseResults(results):
         name = dets[i]
         score = dets[i + 1]
         if _is_valid_name(name):
-            corrected_name = _apply_name_corrections(name)
+            corrected_name = _apply_name_corrections(name, guild_name=guild_name)
             is_valid, corrected_score = _correct_and_validate_score(score)
             if is_valid:
                 MI_SCORES[corrected_name] = corrected_score
@@ -228,7 +253,7 @@ def parseResults(results):
     return MI_SCORES
 
 
-def extract_scores_from_files(vision_client, image_paths, max_height=1024):
+def extract_scores_from_files(vision_client, image_paths, max_height=1024, guild_name=None):
     merged: dict[str, str] = {}
     for image_path in image_paths:
         image = cv2.imread(str(image_path))
@@ -240,7 +265,7 @@ def extract_scores_from_files(vision_client, image_paths, max_height=1024):
         lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
 
         try:
-            scores = parseResults(lines)
+            scores = parseResults(lines, guild_name=guild_name)
         except Exception as exc:
             print(f"Could not parse {image_path}: {exc}")
             traceback.print_exc()

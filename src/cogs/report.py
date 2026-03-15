@@ -14,24 +14,24 @@ from src.cogs.scores import _create_damage_heatmap
 
 # Default configuration for backward compatibility
 DEFAULT_GUILD_NAME = "AboveAll"
-REPORT_HOUR = 3
-REPORT_MINUTE = 00
+REPORT_HOUR = 10
+REPORT_MINUTE = 34
 REPORT_TZ = zoneinfo.ZoneInfo("Europe/Madrid")
 
 # Guild configurations - can be moved to database later
 GUILD_CONFIGS = {
-    "AboveAll": {
-        "channel_id_env": "MI_REPORT_CHANNEL_ID",
-        "role_name": "AboveAll",  # Discord role name that identifies guild members
-        "owner_id_env": "MI_REPORT_RECIPIENT_ID"
-    }
+    # "AboveAll": {
+    #     "channel_id_env": "MI_REPORT_CHANNEL_ID_AA",
+    #     "role_name": "AboveAll",  # Discord role name that identifies guild members
+    #     "owner_id_env": "MI_REPORT_RECIPIENT_ID_AA"
+    # },
     # Add variables to .env file 
     # Future guilds can be added here:
-    # "OtherGuild": {
-    #     "channel_id_env": "OTHER_GUILD_CHANNEL_ID", 
-    #     "role_name": "OtherGuild",
-    #     "owner_id_env": "OTHER_GUILD_RECIPIENT_ID"
-    # }
+    "MoeCafe": {
+        "channel_id_env": "MI_REPORT_CHANNEL_ID_MC", 
+        "role_name": "MoeCafe",
+        "owner_id_env": "MI_REPORT_RECIPIENT_ID_MC"
+    }
 }
 
 

@@ -11,8 +11,8 @@ def get_guild_from_channel_category(interaction: discord.Interaction) -> str | N
     the Discord channel category where they're interacting.
     
     Returns:
-        - "ABOVEALL" if the interaction is in an ABOVEALL category
-        - "MOECAFE" if the interaction is in a MOECAFE category  
+        - "AboveAll" if the interaction is in an ABOVEALL category
+        - "MoeCafe" if the interaction is in a MOECAFE category  
         - None if the category doesn't match any known guild
     """
     if not hasattr(interaction, 'channel') or not interaction.channel:
@@ -31,16 +31,16 @@ def get_guild_from_channel_category(interaction: discord.Interaction) -> str | N
     
     # Check if category name contains guild identifiers
     if "ABOVEALL" in category_name:
-        return "ABOVEALL"
+        return "AboveAll"
     elif "MOECAFE" in category_name:
-        return "MOECAFE"
+        return "MoeCafe"
     
     # Check for category emojis/symbols that might be used
     if "👑" in category_name:
         if "ABOVEALL" in category_name:
-            return "ABOVEALL"
+            return "AboveAll"
         elif "MOECAFE" in category_name:
-            return "MOECAFE"
+            return "MoeCafe"
     
     return None
 
@@ -75,10 +75,10 @@ def format_guild_context_message(guild_name: str) -> str:
     Returns:
         Formatted message string
     """
-    if guild_name == "ABOVEALL":
-        return "📊 **ABOVEALL Guild Context**"
-    elif guild_name == "MOECAFE":
-        return "📊 **MOECAFE Guild Context**" 
+    if guild_name == "AboveAll":
+        return "📊 **AboveAll Guild Context**"
+    elif guild_name == "MoeCafe":
+        return "📊 **MoeCafe Guild Context**" 
     else:
         return f"📊 **{guild_name} Guild Context**"
 

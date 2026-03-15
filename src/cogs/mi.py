@@ -88,16 +88,17 @@ class MICog(commands.Cog):
 
             loop = asyncio.get_running_loop()
             vision_client = vision.ImageAnnotatorClient()
+            
+            # Determine guild based on channel category context first
+            detected_guild_name = get_guild_from_channel_category(interaction)
+            
             scores = await loop.run_in_executor(
                 None,
-                lambda: extract_scores_from_files(vision_client, downloaded_files, max_height=1024),
+                lambda: extract_scores_from_files(vision_client, downloaded_files, max_height=1024, guild_name=detected_guild_name),
             )
 
             # Persist scores to the database (upserts by player_name + date)
             submitter = get_player_by_discord_id(str(interaction.user.id))
-            
-            # Determine guild based on channel category context
-            detected_guild_name = get_guild_from_channel_category(interaction)
             guild_id = None
             
             if detected_guild_name:
