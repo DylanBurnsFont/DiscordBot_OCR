@@ -14,17 +14,17 @@ from src.cogs.scores import _create_damage_heatmap
 
 # Default configuration for backward compatibility
 DEFAULT_GUILD_NAME = "AboveAll"
-REPORT_HOUR = 10
-REPORT_MINUTE = 34
+REPORT_HOUR = 2
+REPORT_MINUTE = 15
 REPORT_TZ = zoneinfo.ZoneInfo("Europe/Madrid")
 
 # Guild configurations - can be moved to database later
 GUILD_CONFIGS = {
-    # "AboveAll": {
-    #     "channel_id_env": "MI_REPORT_CHANNEL_ID_AA",
-    #     "role_name": "AboveAll",  # Discord role name that identifies guild members
-    #     "owner_id_env": "MI_REPORT_RECIPIENT_ID_AA"
-    # },
+    "AboveAll": {
+        "channel_id_env": "MI_REPORT_CHANNEL_ID_AA",
+        "role_name": "AboveAll",  # Discord role name that identifies guild members
+        "owner_id_env": "MI_REPORT_RECIPIENT_ID_AA"
+    },
     # Add variables to .env file 
     # Future guilds can be added here:
     "MoeCafe": {
@@ -199,7 +199,7 @@ class ReportCog(commands.Cog):
             label = yesterday.strftime("week of %d %b %Y")
             heatmap_file = _create_damage_heatmap(damage_data, guild_name, label, yesterday)
             header = f"💥 **{guild_name}** damage heatmap for {label}"
-            await interaction.followup.send(header, file=heatmap_file)
+            await interaction.followup.send(header, file=heatmap_file, ephemeral=True)
             
         except Exception as e:
             await interaction.followup.send(f"Error generating damage report: {str(e)}")
