@@ -2,6 +2,7 @@ import os
 import csv
 import io
 from datetime import datetime, timedelta
+import unicodedata
 
 import discord
 from discord import app_commands
@@ -20,7 +21,10 @@ from src.database import (
     get_player_weekday_scores_for_month,
     get_guild_weekly_attendance,
     _score_to_float,
+    get_guild_by_name,
 )
+
+from src.guild_context import get_guild_from_channel_category
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -47,6 +51,17 @@ def knubeScore(knubeScore, offset):
         return f"{round(total / 1e6, 2)}M"
     elif total >= 1e3:
         return f"{round(total / 1e3, 2)}K"
+
+def _display_width(text: str) -> int:
+    """Calculate the display width of a string, accounting for wide Unicode characters."""
+    width = 0
+    for char in text:
+        # Check if character is wide (typically CJK characters)
+        if unicodedata.east_asian_width(char) in ('F', 'W'):
+            width += 2  # Wide characters take 2 spaces
+        else:
+            width += 1  # Normal characters take 1 space (includes Cyrillic, Greek, etc.)
+    return width
 
 
 def _fmt_score(value) -> str:
@@ -282,7 +297,17 @@ class ScoresCog(commands.Cog):
         return await self._get_guild_name(interaction)
 
     async def _get_guild_name(self, interaction: discord.Interaction) -> str | None:
-        """Get guild name from registered player data."""
+        """Get guild name from channel context first, then fallback to registered player data."""
+        
+        # First try to detect guild from channel category
+        detected_guild_name = get_guild_from_channel_category(interaction)
+        if detected_guild_name:
+            # Verify the guild exists in the database
+            guild_row = get_guild_by_name(detected_guild_name)
+            if guild_row:
+                return detected_guild_name
+        
+        # Fallback to registered player method
         player = get_player_by_discord_id(str(interaction.user.id))
         if not player:
             await interaction.response.send_message(
@@ -290,8 +315,11 @@ class ScoresCog(commands.Cog):
             )
             return None
         if not player["game_guild_id"]:
+            guild_context_msg = ""
+            if detected_guild_name:
+                guild_context_msg = f" Note: Detected {detected_guild_name} from channel context, but this guild is not in the database."
             await interaction.response.send_message(
-                "You are not in a guild. Re-register with `/register` and select a guild.",
+                f"You are not in a guild. Re-register with `/register` and select a guild.{guild_context_msg}",
                 ephemeral=True,
             )
             return None
@@ -1074,24 +1102,69 @@ class ScoresCog(commands.Cog):
                 dates = _week_dates(ref_date)
                 day_labels = [datetime.strptime(date, '%d_%m_%Y').strftime('%a') for date in dates]
                 
-                # Create header row
-                header = f"{'Player':<15} {'Total':<10} {'Days':<5} " + " ".join([f"{day:<8}" for day in day_labels])
-                lines.append(f"```{header}")
-                lines.append("-" * len(header))
-                
-                # Add player data rows (already sorted by total damage)
-                for i, player in enumerate(damage_data[:20]):  # Limit to top 20
-                    daily_scores = []
+                # First, collect all the formatted data to calculate proper column widths
+                formatted_data = []
+                for player in damage_data[:20]:
+                    formatted_player = {
+                        'name': player['player_name'],
+                        'total': _fmt_score(player['total_score']),
+                        'days': str(player['days_present']),
+                        'daily_scores': []
+                    }
+                    
                     for date in dates:
                         day_score = player.get(date)
                         if day_score:
                             formatted_score = _fmt_score(_score_to_float(day_score))
-                            daily_scores.append(f"{formatted_score:<8}")
+                            formatted_player['daily_scores'].append(formatted_score)
                         else:
-                            daily_scores.append(f"{'--':<8}")
+                            formatted_player['daily_scores'].append('--')
                     
-                    total_formatted = _fmt_score(player['total_score'])
-                    row = f"{player['player_name']:<15} {total_formatted:<10} {player['days_present']:<5} " + " ".join(daily_scores)
+                    formatted_data.append(formatted_player)
+                
+                # Calculate column widths based on actual formatted content and display width
+                player_width = max(_display_width('Player'), max(_display_width(p['name']) for p in formatted_data)) + 3
+                total_width = max(_display_width('Total'), max(_display_width(p['total']) for p in formatted_data)) + 2
+                days_width = max(_display_width('Days'), max(_display_width(p['days']) for p in formatted_data)) + 2
+                
+                # Calculate daily column widths
+                daily_widths = []
+                for i, day_label in enumerate(day_labels):
+                    day_scores = [p['daily_scores'][i] for p in formatted_data]
+                    width = max(_display_width(day_label), max(_display_width(score) for score in day_scores)) + 2
+                    daily_widths.append(width)
+                
+                # Helper function to pad text accounting for display width
+                def _pad_text(text: str, target_width: int) -> str:
+                    display_w = _display_width(text)
+                    padding = target_width - display_w
+                    return text + ' ' * padding
+                
+                # Create header row with proper alignment
+                header_parts = [
+                    _pad_text('Player', player_width),
+                    _pad_text('Total', total_width),
+                    _pad_text('Days', days_width)
+                ]
+                for i, day in enumerate(day_labels):
+                    header_parts.append(_pad_text(day, daily_widths[i]))
+                
+                header = "".join(header_parts)
+                lines.append(f"```{header}")
+                lines.append("-" * len(header))
+                
+                # Add player data rows with proper alignment
+                for player_data in formatted_data:
+                    row_parts = [
+                        _pad_text(player_data['name'], player_width),
+                        _pad_text(player_data['total'], total_width),
+                        _pad_text(player_data['days'], days_width)
+                    ]
+                    
+                    for i, score in enumerate(player_data['daily_scores']):
+                        row_parts.append(_pad_text(score, daily_widths[i]))
+                    
+                    row = "".join(row_parts)
                     lines.append(row)
                 
                 lines.append("```")

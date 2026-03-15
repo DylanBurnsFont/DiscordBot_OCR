@@ -8,3 +8,5 @@ testDB.py
 src/__pycache__/
 src/cogs/__pycache__/
 data/
+check*
+test*

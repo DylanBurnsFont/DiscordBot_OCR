@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta
 import zoneinfo
+import logging
 
 import discord
 from discord import app_commands
@@ -42,6 +43,22 @@ class ReportCog(commands.Cog):
 
     def cog_unload(self):
         self.daily_report.cancel()
+
+    def _log_command_usage(self, command_name: str, user: discord.User, **kwargs):
+        """Log command usage to file."""
+        try:
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            params = " ".join([f"{k}='{v}'" for k, v in kwargs.items() if v is not None])
+            params_str = f" with {params}" if params else ""
+            log_entry = f"[{timestamp}] {command_name} command called by {user.display_name} (ID: {user.id}){params_str}\n"
+            
+            # Use absolute path to ensure log file is created in bot directory
+            log_path = os.path.abspath("command_usage_log.txt")
+            with open(log_path, "a", encoding="utf-8") as log_file:
+                log_file.write(log_entry)
+            print(f"[report] Logged {command_name} command to {log_path}")
+        except Exception as e:
+            print(f"[report] Failed to log {command_name} usage: {e}")
 
     def get_guild_from_user_roles(self, member: discord.Member) -> str | None:
         """Determine which guild a Discord user belongs to based on their roles."""
@@ -149,6 +166,9 @@ class ReportCog(commands.Cog):
     @app_commands.describe(guild_name="Guild name (optional - will auto-detect from your roles if not specified)")
     async def manual_report(self, interaction: discord.Interaction, guild_name: str = None):
         """Manually trigger a damage report for a specific guild or user's guild."""
+        # Log the command usage
+        self._log_command_usage("manual-report", interaction.user, guild_name=guild_name)
+            
         if guild_name and guild_name not in GUILD_CONFIGS:
             await interaction.response.send_message(f"Guild '{guild_name}' not found. Available guilds: {', '.join(GUILD_CONFIGS.keys())}", ephemeral=True)
             return
@@ -185,10 +205,18 @@ class ReportCog(commands.Cog):
             await interaction.followup.send(f"Error generating damage report: {str(e)}")
             print(f"[report] Manual report error for {guild_name}: {e}")
 
-    @app_commands.command(name="guild-status", description="Show guild configuration status (admin only)")
-    @app_commands.default_permissions(administrator=True)
+    @app_commands.command(name="guild-status", description="Show guild configuration status (owner only)")
     async def guild_status(self, interaction: discord.Interaction):
         """Show guild configuration status."""
+        # Check if user is the bot owner
+        discord_owner_id = os.getenv("DISCORD_OWNER_ID")
+        if not discord_owner_id or str(interaction.user.id) != discord_owner_id:
+            await interaction.response.send_message("❌ This command can only be used by the bot owner.", ephemeral=True)
+            return
+        
+        # Log the command usage
+        self._log_command_usage("guild-status", interaction.user)
+            
         embed = discord.Embed(title="Guild Configuration Status", color=0x00ff00)
         
         for guild_name, config in GUILD_CONFIGS.items():
@@ -210,11 +238,11 @@ class ReportCog(commands.Cog):
             if owner_id:
                 try:
                     owner = await self.bot.fetch_user(int(owner_id))
-                    status_lines.append(f"✅ **Owner:** {owner.display_name} ({owner.mention})")
+                    status_lines.append(f"✅ **Report to:** {owner.display_name} ({owner.mention})")
                 except:
-                    status_lines.append(f"⚠️ **Owner:** ID {owner_id} (not found)")
+                    status_lines.append(f"⚠️ **Report to:** ID {owner_id} (not found)")
             else:
-                status_lines.append(f"❌ **Owner:** {config['owner_id_env']} not set")
+                status_lines.append(f"❌ **Report to:** {config['owner_id_env']} not set")
             
             embed.add_field(
                 name=f"{guild_name}",

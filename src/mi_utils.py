@@ -182,20 +182,24 @@ def parseResults(results):
             pass
     # Get rid of the header lines
     dets = results[5:]
+    dets = [item for item in dets if not item.isdigit()]
     top3 = dets[:6]
     # Get rid of top3 from general results
     dets = dets[6:]
     # Process top-3 scores with OCR correction
-    top3_pairs = [(top3[0], top3[3]), (top3[1], top3[4]), (top3[2], top3[5])]
+    names = [x for x in top3 if not _SCORE_RE.match(x)]
+    scores = [x for x in top3 if _SCORE_RE.match(x)]
+    top3_pairs = zip(names, scores)
     for name, score in top3_pairs:
-        corrected_name = _apply_name_corrections(name)
-        is_valid, corrected_score = _correct_and_validate_score(score)
-        if is_valid:
-            MI_SCORES[corrected_name] = corrected_score
+        print(name, score)
+        if not _SCORE_RE.match(name):
+            corrected_name = _apply_name_corrections(name)
+            is_valid, corrected_score = _correct_and_validate_score(score)
+            if is_valid:
+                MI_SCORES[corrected_name] = corrected_score
 
     # print(dets)
     # Get rid of the position of each player
-    dets = [item for item in dets if not item.isdigit()]
 
     # Sliding window: find consecutive (valid_name, valid_score) pairs.
     # This is robust to garbled rows where OCR drops/adds tokens — unlike
@@ -220,7 +224,7 @@ def parseResults(results):
         for char in ' <>_-':
             MI_SCORES[key] = MI_SCORES[key].replace(char, '')
 
-    print(f"🎯 Final processed names: {list(MI_SCORES.keys())}")
+    # print(f"🎯 Final processed names: {list(MI_SCORES.keys())}")
     return MI_SCORES
 
 

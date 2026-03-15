@@ -12,6 +12,7 @@ from src.database import (
     get_player_by_discord_id,
     update_player_username,
 )
+from src.guild_context import get_guild_from_channel_category, format_guild_context_message
 
 
 def _is_owner(interaction: discord.Interaction) -> bool:
@@ -64,13 +65,21 @@ class RegisterModal(discord.ui.Modal, title="Register"):
 
 
 class GuildSelect(discord.ui.Select):
-    def __init__(self):
+    def __init__(self, detected_guild: str | None = None):
         db_guilds = [row["name"] for row in get_all_guilds()]
         options = [discord.SelectOption(label="No guild", value="__none__")] + [
             discord.SelectOption(label=g, value=g) for g in db_guilds
         ]
         if not options:
             options = [discord.SelectOption(label="No guild", value="__none__")]
+            
+        # Pre-select the detected guild if available
+        if detected_guild:
+            for option in options:
+                if option.value == detected_guild:
+                    option.default = True
+                    break
+                    
         super().__init__(placeholder="Select your in-game guild…", min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: discord.Interaction):
@@ -79,9 +88,9 @@ class GuildSelect(discord.ui.Select):
 
 
 class GuildSelectView(discord.ui.View):
-    def __init__(self):
+    def __init__(self, detected_guild: str | None = None):
         super().__init__()
-        self.add_item(GuildSelect())
+        self.add_item(GuildSelect(detected_guild))
 
 
 class RegisterCog(commands.Cog):
@@ -117,9 +126,18 @@ class RegisterCog(commands.Cog):
 
     @app_commands.command(name="register", description="Register yourself to use the bot")
     async def register_command(self, interaction: discord.Interaction):
+        # Detect guild from channel category
+        detected_guild = get_guild_from_channel_category(interaction)
+        
+        message = "Select your in-game guild to continue registration:"
+        
+        if detected_guild:
+            guild_context_msg = format_guild_context_message(detected_guild)
+            message = f"{guild_context_msg}\n\n{message}"
+        
         await interaction.response.send_message(
-            "Select your in-game guild to continue registration:",
-            view=GuildSelectView(),
+            message,
+            view=GuildSelectView(detected_guild),
             ephemeral=True,
         )
 

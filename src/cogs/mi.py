@@ -14,7 +14,8 @@ from src.mi_utils import (
     write_scores_csv,
     write_scores_chart,
 )
-from src.database import create_scan, save_scores, get_player_by_discord_id, get_today_score, get_daily_scan_count
+from src.database import create_scan, save_scores, get_player_by_discord_id, get_today_score, get_daily_scan_count, get_guild_by_name
+from src.guild_context import get_guild_from_channel_category, format_guild_context_message
 
 DAILY_SCAN_LIMIT = 1
 
@@ -94,12 +95,30 @@ class MICog(commands.Cog):
 
             # Persist scores to the database (upserts by player_name + date)
             submitter = get_player_by_discord_id(str(interaction.user.id))
-            guild_id = submitter["game_guild_id"] if submitter else None
+            
+            # Determine guild based on channel category context
+            detected_guild_name = get_guild_from_channel_category(interaction)
+            guild_id = None
+            
+            if detected_guild_name:
+                guild_row = get_guild_by_name(detected_guild_name)
+                guild_id = guild_row["id"] if guild_row else None
+            
+            # Fallback to submitter's registered guild if no category detected
+            if guild_id is None:
+                guild_id = submitter["game_guild_id"] if submitter else None
+            
             scan_id = create_scan(submitted_by=str(interaction.user.id))
             inserted, updated = save_scores(scan_id, scores, guild_id=guild_id)
             print(f"Scan {scan_id}: {inserted} inserted, {updated} updated in DB")
 
             result_msg = f"✅ Done! Found **{len(scores)}** player(s) — {inserted} new, {updated} updated."
+            
+            # Add guild context information
+            if detected_guild_name:
+                guild_context_msg = format_guild_context_message(detected_guild_name)
+                result_msg = f"{guild_context_msg}\n{result_msg}"
+            
             if note:
                 result_msg = f"{note}\n{result_msg}"
             await interaction.edit_original_response(content=result_msg)
