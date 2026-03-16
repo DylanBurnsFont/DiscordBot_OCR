@@ -180,6 +180,8 @@ def _correct_and_validate_score(s: str) -> tuple[bool, str]:
         corrected = s[:-1] + "B"
     elif s and s[-1] == "7":
         corrected = s[:-1] + "T"
+    elif s and s[-1] == "1":
+        corrected = s[:-1] + "T"
     
     is_valid = bool(_SCORE_RE.match(corrected))
     return is_valid, corrected
@@ -206,14 +208,33 @@ def parseResults(results, guild_name=None):
         except ValueError:
             pass
     # Get rid of the header lines
-    dets = results[5:]
+    print(results)
+    
+    # Find "Member Ranking" and start processing from after it
+    try:
+        member_ranking_index = results.index("Member Ranking")
+        dets = results[member_ranking_index + 1:]
+        print(f"Found 'Member Ranking' at index {member_ranking_index}, starting from index {member_ranking_index + 1}")
+    except ValueError:
+        # Fallback to old behavior if "Member Ranking" not found
+        print("'Member Ranking' not found, using fallback (skip first 5 elements)")
+        dets = results[5:]
     dets = [item for item in dets if not item.isdigit()]
     top3 = dets[:6]
+    
+    # Clean whitespace and special characters from top3 scores before regex matching
+    cleaned_top3 = []
+    for item in top3:
+        cleaned_item = item
+        for char in ' <>_-':
+            cleaned_item = cleaned_item.replace(char, '')
+        cleaned_top3.append(cleaned_item)
+    
     # Get rid of top3 from general results
     dets = dets[6:]
     # Process top-3 scores with OCR correction
-    names = [x for x in top3 if not _SCORE_RE.match(x)]
-    scores = [x for x in top3 if _SCORE_RE.match(x)]
+    names = [x for x in cleaned_top3 if not _SCORE_RE.match(x)]
+    scores = [x for x in cleaned_top3 if _SCORE_RE.match(x)]
     top3_pairs = zip(names, scores)
     for name, score in top3_pairs:
         # print(name, score)
@@ -244,7 +265,7 @@ def parseResults(results, guild_name=None):
         else:
             i += 1
 
-    # Get rid of whitespace and special characters FROM SCORES ONLY
+    # Get rid of whitespace and special characters from final scores
     for key in MI_SCORES:
         for char in ' <>_-':
             MI_SCORES[key] = MI_SCORES[key].replace(char, '')

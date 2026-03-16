@@ -162,49 +162,6 @@ class ReportCog(commands.Cog):
         print(f"[report] Loop ready. Will fire daily at {REPORT_HOUR:02d}:{REPORT_MINUTE:02d} {REPORT_TZ}")
         print(f"[report] Configured guilds: {', '.join(GUILD_CONFIGS.keys())}")
 
-    @app_commands.command(name="manual-report", description="Manually trigger a damage report")
-    @app_commands.describe(guild_name="Guild name (optional - will auto-detect from your roles if not specified)")
-    async def manual_report(self, interaction: discord.Interaction, guild_name: str = None):
-        """Manually trigger a damage report for a specific guild or user's guild."""
-        # Log the command usage
-        self._log_command_usage("manual-report", interaction.user, guild_name=guild_name)
-            
-        if guild_name and guild_name not in GUILD_CONFIGS:
-            await interaction.response.send_message(f"Guild '{guild_name}' not found. Available guilds: {', '.join(GUILD_CONFIGS.keys())}", ephemeral=True)
-            return
-        
-        # If no guild specified, try to determine from user's roles
-        if not guild_name:
-            if interaction.guild and hasattr(interaction.user, 'roles'):
-                guild_name = self.get_guild_from_user_roles(interaction.user)
-                if not guild_name:
-                    await interaction.response.send_message(f"Could not determine your guild from roles. Available guilds: {', '.join(GUILD_CONFIGS.keys())}", ephemeral=True)
-                    return
-            else:
-                guild_name = DEFAULT_GUILD_NAME  # Fallback
-        
-        yesterday = datetime.now(tz=REPORT_TZ) - timedelta(days=1)
-        config = GUILD_CONFIGS[guild_name]
-        
-        await interaction.response.send_message(f"Generating damage report for **{guild_name}**...")
-        
-        try:
-            # Send the report to the current channel instead of the configured channel
-            damage_data = get_total_weekly_leaderboard(guild_name, yesterday)
-            
-            if not damage_data:
-                await interaction.followup.send(f"No damage data found for **{guild_name}** for the week of {yesterday.strftime('%d %b %Y')}.")
-                return
-
-            label = yesterday.strftime("week of %d %b %Y")
-            heatmap_file = _create_damage_heatmap(damage_data, guild_name, label, yesterday)
-            header = f"💥 **{guild_name}** damage heatmap for {label}"
-            await interaction.followup.send(header, file=heatmap_file, ephemeral=True)
-            
-        except Exception as e:
-            await interaction.followup.send(f"Error generating damage report: {str(e)}")
-            print(f"[report] Manual report error for {guild_name}: {e}")
-
     @app_commands.command(name="guild-status", description="Show guild configuration status (owner only)")
     async def guild_status(self, interaction: discord.Interaction):
         """Show guild configuration status."""

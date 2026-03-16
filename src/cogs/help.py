@@ -40,7 +40,6 @@ HELP_EMBED.add_field(
         "`/guild-scores today` — See today's scores for your guild.\n"
         "`/guild-scores week` — See weekly scores for your guild.\n"
         "`/guild-scores month` — See monthly scores for your guild.\n"
-        "`/guild-scores attendance` — See who didn't attack this week and which days they missed (supports heat chart).\n"
         "`/guild-attendance` — Same as above, standalone command with heat chart visualization.\n"
         "`/guild-damage-report` — Generate weekly damage heatmap showing daily scores with color-coded visualization.\n"
         "`/manual-report [guild]` — Manually trigger a damage heatmap report.\n"

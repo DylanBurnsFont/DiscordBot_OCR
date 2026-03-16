@@ -33,35 +33,45 @@ class RegisterModal(discord.ui.Modal, title="Register"):
         self.selected_guild = selected_guild
 
     async def on_submit(self, interaction: discord.Interaction):
-        game_name = self.game_name.value.strip()
-        guild_name = self.selected_guild
+        try:
+            print(f"DEBUG: Modal submitted with game_name: {self.game_name.value}")
+            game_name = self.game_name.value.strip()
+            guild_name = self.selected_guild
+            print(f"DEBUG: Processing registration for {game_name} in guild {guild_name}")
 
-        existing = get_player_by_discord_id(str(interaction.user.id))
-        if existing:
-            await interaction.response.send_message(
-                f"You are already registered as **{existing['username']}**.",
-                ephemeral=True,
-            )
-            return
-
-        guild_id: int | None = None
-        if guild_name:
-            row = get_guild_by_name(guild_name)
-            if row is None:
+            existing = get_player_by_discord_id(str(interaction.user.id))
+            if existing:
                 await interaction.response.send_message(
-                    f"Guild **{guild_name}** not found. Ask an admin to register it first.",
+                    f"You are already registered as **{existing['username']}**.",
                     ephemeral=True,
                 )
                 return
-            guild_id = row["id"]
 
-        add_player(str(interaction.user.id), game_name, guild_id)
+            guild_id: int | None = None
+            if guild_name:
+                row = get_guild_by_name(guild_name)
+                if row is None:
+                    await interaction.response.send_message(
+                        f"Guild **{guild_name}** not found. Ask an admin to register it first.",
+                        ephemeral=True,
+                    )
+                    return
+                guild_id = row["id"]
 
-        guild_info = f" in guild **{guild_name}**" if guild_name else " with no guild"
-        await interaction.response.send_message(
-            f"Registered **{game_name}**{guild_info}!",
-            ephemeral=True,
-        )
+            add_player(str(interaction.user.id), game_name, guild_id)
+
+            guild_info = f" in guild **{guild_name}**" if guild_name else " with no guild"
+            await interaction.response.send_message(
+                f"Registered **{game_name}**{guild_info}!",
+                ephemeral=True,
+            )
+            print(f"DEBUG: Registration completed successfully")
+        except Exception as e:
+            print(f"DEBUG: Error in modal submit: {e}")
+            await interaction.response.send_message(
+                f"Error during registration: {e}",
+                ephemeral=True
+            )
 
 
 class GuildSelect(discord.ui.Select):
@@ -83,8 +93,18 @@ class GuildSelect(discord.ui.Select):
         super().__init__(placeholder="Select your in-game guild…", min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        guild_name = None if self.values[0] == "__none__" else self.values[0]
-        await interaction.response.send_modal(RegisterModal(guild_name))
+        try:
+            guild_name = None if self.values[0] == "__none__" else self.values[0]
+            print(f"DEBUG: Guild selected: {guild_name}")
+            modal = RegisterModal(guild_name)
+            await interaction.response.send_modal(modal)
+            print(f"DEBUG: Modal sent successfully")
+        except Exception as e:
+            print(f"DEBUG: Error in guild select callback: {e}")
+            await interaction.response.send_message(
+                f"Error opening registration form: {e}",
+                ephemeral=True
+            )
 
 
 class GuildSelectView(discord.ui.View):
@@ -126,20 +146,30 @@ class RegisterCog(commands.Cog):
 
     @app_commands.command(name="register", description="Register yourself to use the bot")
     async def register_command(self, interaction: discord.Interaction):
-        # Detect guild from channel category
-        detected_guild = get_guild_from_channel_category(interaction)
-        
-        message = "Select your in-game guild to continue registration:"
-        
-        if detected_guild:
-            guild_context_msg = format_guild_context_message(detected_guild)
-            message = f"{guild_context_msg}\n\n{message}"
-        
-        await interaction.response.send_message(
-            message,
-            view=GuildSelectView(detected_guild),
-            ephemeral=True,
-        )
+        try:
+            # Detect guild from channel category
+            detected_guild = get_guild_from_channel_category(interaction)
+            print(f"DEBUG: Detected guild: {detected_guild}")
+            
+            message = "Select your in-game guild to continue registration:"
+            
+            if detected_guild:
+                guild_context_msg = format_guild_context_message(detected_guild)
+                message = f"{guild_context_msg}\n\n{message}"
+            
+            print(f"DEBUG: Sending guild select view")
+            await interaction.response.send_message(
+                message,
+                view=GuildSelectView(detected_guild),
+                ephemeral=True,
+            )
+            print(f"DEBUG: Guild select view sent successfully")
+        except Exception as e:
+            print(f"DEBUG: Error in register command: {e}")
+            await interaction.response.send_message(
+                f"Error starting registration: {e}",
+                ephemeral=True
+            )
 
     @app_commands.command(name="update-ign", description="Update your in-game name")
     @app_commands.describe(new_name="Your new in-game player name")
