@@ -27,8 +27,8 @@ Reads MI scores
 - [x] Add timed message after reset with the previous day's scores and @ someone
 - [x] Make the timed messages explicit to a certain person and to their assigned guild
 - [ ] % share of guild damage today/week for guild members
-- [ ] When displaying scores, add a normalization parameter to account for different power guilds
 - [ ] Damage evolution over the weeks to track progress
+- [ ] Prayer leaderboard
 
 ## Multi-Guild Configuration
 

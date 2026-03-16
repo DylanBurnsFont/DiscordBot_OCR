@@ -21,6 +21,7 @@ EXTENSIONS = [
     "src.cogs.scores",
     "src.cogs.report",
     "src.cogs.setscore",
+    "src.cogs.pray",
 ]
 
 
