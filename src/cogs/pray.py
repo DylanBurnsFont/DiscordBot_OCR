@@ -20,6 +20,7 @@ class PrayCog(commands.Cog):
         await interaction.response.send_message(
             f"🙏 Your prayer has been heard **{username}** 🙏",
             file=discord.File(FORTUNE_GOD_PATH / images[randomIndex]),
+            ephemeral=True,
         )
 
 
