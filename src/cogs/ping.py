@@ -9,7 +9,7 @@ class PingCog(commands.Cog):
 
     @app_commands.command(name="ping", description="Health check for the bot")
     async def ping_command(self, interaction: discord.Interaction):
-        await interaction.response.send_message("pong")
+        await interaction.response.send_message("pong", ephemeral=True)
 
 
 async def setup(bot: commands.Bot):
