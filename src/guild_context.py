@@ -76,11 +76,11 @@ def format_guild_context_message(guild_name: str) -> str:
         Formatted message string
     """
     if guild_name == "AboveAll":
-        return "📊 **AboveAll Guild Context**"
+        return "📊 **AboveAll Guild Chat**"
     elif guild_name == "MoeCafe":
-        return "📊 **MoeCafe Guild Context**" 
+        return "📊 **MoeCafe Guild Chat**" 
     else:
-        return f"📊 **{guild_name} Guild Context**"
+        return f"📊 **{guild_name} Guild Chat**"
 
 
 def validate_guild_access(interaction: discord.Interaction, required_guild: str) -> bool:
