@@ -3,6 +3,7 @@ import csv
 import json
 import os
 import re
+import sys
 import traceback
 
 from src.database import _score_to_float
@@ -20,7 +21,7 @@ def _configure_chart_font():
     import platform
     
     system = platform.system()
-    
+    print(f"Detected operating system: {system}")
     if system == "Windows":
         candidates = [
             "Segoe UI",             # Best overall Unicode on Windows (Latin, Greek, Thai, etc.)
@@ -36,13 +37,11 @@ def _configure_chart_font():
         ]
     elif system == "Linux":
         candidates = [
-            "Noto Sans CJK JP",     # Japanese + CJK
-            "Noto Sans CJK KR",     # Korean
-            "Noto Sans CJK SC",     # Chinese Simplified
-            "Noto Sans CJK TC",     # Chinese Traditional
-            "Noto Sans",            # Latin, Greek, Thai, and many others
-            "WenQuanYi Micro Hei",  # CJK fallback
-            "DejaVu Sans",          # Latin/Greek fallback
+            "Noto Sans CJK JP",   # Japanese, Chinese, Korean — installed on your Pi
+            "Noto Sans Thai",     # Thai
+            "Noto Sans",          # Latin, Greek, and most other scripts
+            "Droid Sans Fallback", # Extra CJK fallback — also installed on your Pi
+            "DejaVu Sans",
             "sans-serif",
         ]
     else:  # macOS or other
@@ -60,16 +59,12 @@ def _configure_chart_font():
     
     # Pick ALL installed candidates (not just the first), so matplotlib can
     # fall back through the list for glyphs missing in earlier fonts
-    selected = [name for name in candidates if name in installed]
+    selected = next((name for name in candidates if name in installed), "DejaVu Sans")
     
-    if not selected:
-        selected = ["DejaVu Sans"]
-    
-    # Always append sans-serif as the final fallback
-    if "sans-serif" not in selected:
-        selected.append("sans-serif")
+    print(f"[font] Selected font: {selected}", flush=True, file=sys.stderr)
 
-    plt.rcParams["font.family"] = selected
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.sans-serif"] = [selected, "DejaVu Sans"]  # THIS is where the fallback list goes
     plt.rcParams["axes.unicode_minus"] = False
 
 
