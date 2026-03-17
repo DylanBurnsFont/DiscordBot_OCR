@@ -1,0 +1,4 @@
+discord
+google-cloud-vision
+matplotlib
+pandas
