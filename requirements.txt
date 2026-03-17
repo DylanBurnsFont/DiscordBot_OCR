@@ -2,3 +2,5 @@ discord
 google-cloud-vision
 matplotlib
 pandas
+opencv-python-headless
+python-dotenv
