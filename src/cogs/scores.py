@@ -862,7 +862,7 @@ class ScoresCog(commands.Cog):
     )
     async def guild_attendance(self, interaction: discord.Interaction, day: int | None = None, format: str = "message"):
         """Standalone attendance command - same functionality as guild-scores attendance"""
-        await interaction.response.defer(ephemeral=False)
+        await interaction.response.defer(ephemeral=True)
         guild_name = await self._get_guild_name_from_user_submissions(interaction)
         if guild_name is None:
             return
@@ -930,7 +930,7 @@ class ScoresCog(commands.Cog):
                 await interaction.followup.send(
                     f"📊 **{guild_name}** Boss hit heatmap for {label}",
                     file=heatmap_file,
-                    ephemeral=False
+                    ephemeral=True
                 )
             except ValueError as e:
                 await interaction.followup.send(
@@ -985,7 +985,7 @@ class ScoresCog(commands.Cog):
     )
     async def guild_damage_report(self, interaction: discord.Interaction, day: int | None = None, format: str = "heatmap"):
         """Weekly damage report showing damage dealt by each player across weekdays"""
-        await interaction.response.defer(ephemeral=False)
+        await interaction.response.defer(ephemeral=True)
         guild_name = await self._get_guild_name_from_user_submissions(interaction)
         if guild_name is None:
             return
@@ -1093,7 +1093,7 @@ class ScoresCog(commands.Cog):
                 await interaction.followup.send(
                     f"💥 **{guild_name}** damage heatmap for {label}",
                     file=heatmap_file,
-                    ephemeral=False
+                    ephemeral=True
                 )
             except ValueError as e:
                 await interaction.followup.send(
