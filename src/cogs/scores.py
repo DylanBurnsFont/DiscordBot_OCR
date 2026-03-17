@@ -106,29 +106,20 @@ _MONTH_CHOICES = [
     app_commands.Choice(name="December", value=12),
 ]
 
-def _get_font_family() -> list[str]:
-    """Return only the font candidates that are actually installed, falling back to DejaVu Sans."""
-    from matplotlib import font_manager
-    import warnings
-    _FONT_CANDIDATES = [
-        "Microsoft YaHei",
-        "Microsoft JhengHei",
-        "Malgun Gothic",
-        "Yu Gothic",
-        "Noto Sans CJK SC",
-        "Noto Sans CJK TC",
-        "WenQuanYi Micro Hei",
+CANDIDATES = [
+        "Microsoft YaHei",     # Chinese (Simplified) - best for CJK
+        "Microsoft JhengHei",  # Chinese (Traditional) 
+        "Malgun Gothic",       # Korean
+        "Yu Gothic",           # Japanese
         "Segoe UI",
-        "Calibri",
+        "Segoe UI Historic",   # Better Unicode support
+        "Calibri", 
         "Tahoma",
         "Arial",
+        "Microsoft Sans Serif", # Fallback with decent Unicode
         "DejaVu Sans",
+        "sans-serif"
     ]
-    installed = {f.name for f in font_manager.fontManager.ttflist}
-    available = [f for f in _FONT_CANDIDATES if f in installed]
-    return available if available else ["DejaVu Sans"]
-
-CANDIDATES = _get_font_family()
 
 
 async def _send_chunked(

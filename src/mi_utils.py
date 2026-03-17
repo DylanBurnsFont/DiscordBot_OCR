@@ -209,18 +209,12 @@ def parseResults(results, guild_name=None):
         except ValueError:
             pass
     # Get rid of the header lines
+
     print(results)
-    
-    # Find "Member Ranking" and start processing from after it
-    try:
-        member_ranking_index = results.index("Member Ranking")
-        dets = results[member_ranking_index + 1:]
-        print(f"Found 'Member Ranking' at index {member_ranking_index}, starting from index {member_ranking_index + 1}")
-    except ValueError:
-        # Fallback to old behavior if "Member Ranking" not found
-        print("'Member Ranking' not found, using fallback (skip first 5 elements)")
-        dets = results[5:]
-    dets = [item for item in dets if not item.isdigit()]
+    print()
+    # dets = results[5:]
+    dets = [item for item in results if not (item.isdigit() and 1 <= len(item) <= 2)]
+    print(dets)
     top3 = dets[:6]
     
     # Clean whitespace and special characters from top3 scores before regex matching
@@ -283,7 +277,9 @@ def extract_scores_from_files(vision_client, image_paths, max_height=1024, guild
             continue
 
         image = downscaleImage(image, max_height=max_height)
-        raw_text = detect_text_raw(vision_client, image)
+        h,w = image.shape[:2]
+        cropped_image = image[int(h*0.2):h, 0:w]
+        raw_text = detect_text_raw(vision_client, cropped_image)
         lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
 
         try:

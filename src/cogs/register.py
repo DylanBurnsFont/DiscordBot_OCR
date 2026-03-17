@@ -87,7 +87,7 @@ class GuildSelect(discord.ui.Select):
         if detected_guild:
             for option in options:
                 if option.value == detected_guild:
-                    option.default = True
+                    option.default = False
                     break
                     
         super().__init__(placeholder="Select your in-game guild…", min_values=1, max_values=1, options=options)
