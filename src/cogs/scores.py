@@ -967,10 +967,10 @@ class ScoresCog(commands.Cog):
     async def guild_damage_report(self, interaction: discord.Interaction, day: int | None = None, format: str = "heatmap"):
         """Weekly damage report showing damage dealt by each player across weekdays"""
         await interaction.response.defer(ephemeral=True)
-        guild_name = await self._get_guild_name_from_user_submissions(interaction)
+        # Use channel context first, then fallback to registered player
+        guild_name = await self._get_guild_name(interaction)
         if guild_name is None:
             return
-        
         now = datetime.now()
         if day is not None:
             try:
@@ -982,10 +982,8 @@ class ScoresCog(commands.Cog):
                 return
         else:
             ref_date = now
-        
         label = ref_date.strftime("week of %d %b %Y")
         damage_data = get_total_weekly_leaderboard(guild_name, ref_date)
-        
         # Check if this is the special user and boost KNUBE's score
         isKnube = interaction.user.id == 1391487700242141347
         if isKnube and damage_data:
@@ -995,12 +993,10 @@ class ScoresCog(commands.Cog):
                 if player['player_name'] == 'KNUBE':
                     knube_player = player
                     break
-            
             if knube_player:
                 # Get week dates
                 from src.database import _week_dates
                 dates = _week_dates(ref_date)
-                
                 # For each day, find the highest damage and add it to KNUBE's score for that day
                 for date in dates:
                     highest_daily_score = 0
@@ -1010,56 +1006,45 @@ class ScoresCog(commands.Cog):
                             score_float = _score_to_float(day_score)
                             if score_float > highest_daily_score:
                                 highest_daily_score = score_float
-                    
                     # Add the highest daily score to KNUBE's score for this day
                     if highest_daily_score > 0:
                         current_knube_score = 0
                         if knube_player.get(date):
                             current_knube_score = _score_to_float(knube_player[date])
-                        
                         new_score = current_knube_score + highest_daily_score
                         knube_player[date] = _fmt_score(new_score)
-                
                 # Recalculate KNUBE's total_score
                 new_total = 0
                 for date in dates:
                     if knube_player.get(date):
                         new_total += _score_to_float(knube_player[date])
                 knube_player['total_score'] = new_total
-                
                 # Re-sort the data by total score
                 damage_data = sorted(damage_data, key=lambda x: x['total_score'], reverse=True)
-        
         if not damage_data:
             await interaction.followup.send(
                 f"No damage data found for **{guild_name}** for the {label}.",
                 ephemeral=True
             )
             return
-        
         if format == "csv":
             # Create CSV data
             csv_data = []
-            
             # Get week dates for column headers
             from src.database import _week_dates
             dates = _week_dates(ref_date)
             day_labels = [datetime.strptime(date, '%d_%m_%Y').strftime('%a') for date in dates]
-            
             for player in damage_data:
                 row_data = {
                     "Player": player['player_name'],
                     "Total_Damage": _fmt_score(player['total_score']),
                     "Days_Present": player['days_present']
                 }
-                
                 # Add daily scores
                 for i, date in enumerate(dates):
                     day_score = player.get(date)
                     row_data[day_labels[i]] = day_score if day_score else "0"
-                
                 csv_data.append(row_data)
-            
             filename = f"guild_damage_{ref_date.strftime('%Y_%m_%d')}.csv"
             csv_file = _create_csv_file(csv_data, filename)
             await interaction.followup.send(
@@ -1084,16 +1069,13 @@ class ScoresCog(commands.Cog):
         else:
             # Message format
             lines = []
-            
             if damage_data:
                 lines.append("💥 **Top damage dealers this week:**")
                 lines.append("")
-                
                 # Get week dates for day headers
                 from src.database import _week_dates
                 dates = _week_dates(ref_date)
                 day_labels = [datetime.strptime(date, '%d_%m_%Y').strftime('%a') for date in dates]
-                
                 # First, collect all the formatted data to calculate proper column widths
                 formatted_data = []
                 for player in damage_data[:20]:
@@ -1103,7 +1085,6 @@ class ScoresCog(commands.Cog):
                         'days': str(player['days_present']),
                         'daily_scores': []
                     }
-                    
                     for date in dates:
                         day_score = player.get(date)
                         if day_score:
@@ -1111,27 +1092,22 @@ class ScoresCog(commands.Cog):
                             formatted_player['daily_scores'].append(formatted_score)
                         else:
                             formatted_player['daily_scores'].append('--')
-                    
                     formatted_data.append(formatted_player)
-                
                 # Calculate column widths based on actual formatted content and display width
                 player_width = max(_display_width('Player'), max(_display_width(p['name']) for p in formatted_data)) + 3
                 total_width = max(_display_width('Total'), max(_display_width(p['total']) for p in formatted_data)) + 2
                 days_width = max(_display_width('Days'), max(_display_width(p['days']) for p in formatted_data)) + 2
-                
                 # Calculate daily column widths
                 daily_widths = []
                 for i, day_label in enumerate(day_labels):
                     day_scores = [p['daily_scores'][i] for p in formatted_data]
                     width = max(_display_width(day_label), max(_display_width(score) for score in day_scores)) + 2
                     daily_widths.append(width)
-                
                 # Helper function to pad text accounting for display width
                 def _pad_text(text: str, target_width: int) -> str:
                     display_w = _display_width(text)
                     padding = target_width - display_w
                     return text + ' ' * padding
-                
                 # Create header row with proper alignment
                 header_parts = [
                     _pad_text('Player', player_width),
@@ -1140,11 +1116,9 @@ class ScoresCog(commands.Cog):
                 ]
                 for i, day in enumerate(day_labels):
                     header_parts.append(_pad_text(day, daily_widths[i]))
-                
                 header = "".join(header_parts)
                 lines.append(f"```{header}")
                 lines.append("-" * len(header))
-                
                 # Add player data rows with proper alignment
                 for player_data in formatted_data:
                     row_parts = [
@@ -1152,22 +1126,17 @@ class ScoresCog(commands.Cog):
                         _pad_text(player_data['total'], total_width),
                         _pad_text(player_data['days'], days_width)
                     ]
-                    
                     for i, score in enumerate(player_data['daily_scores']):
                         row_parts.append(_pad_text(score, daily_widths[i]))
-                    
                     row = "".join(row_parts)
                     lines.append(row)
-                
                 lines.append("```")
-            
             if not lines:
                 await interaction.followup.send(
                     f"No damage data found for **{guild_name}** for the {label}.",
                     ephemeral=True
                 )
                 return
-            
             header = f"💥 **{guild_name}** — Damage Report for {label}"
             await _send_chunked(interaction, header, lines)
 
