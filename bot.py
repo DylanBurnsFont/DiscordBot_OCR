@@ -54,12 +54,16 @@ class DiscordBot(commands.Bot):
         db_path = BOT_DIR / "data" / "bot.db"
         init_db(db_path)
         print(f"Database ready: {db_path}")
+
+        guild_id = os.getenv("DISCORD_GUILD_ID")
+        if guild_id:
+            # Sync while tree is still empty to wipe any stale global commands
+            await self.tree.sync()
+            print("Global commands cleared.")
+
         for extension in EXTENSIONS:
             await self.load_extension(extension)
 
-    async def on_ready(self):
-        print(f"Logged in as {self.user} (app_id={self.application_id})")
-        guild_id = os.getenv("DISCORD_GUILD_ID")
         if guild_id:
             discord_guild = discord.Object(id=int(guild_id))
             self.tree.copy_global_to(guild=discord_guild)
@@ -68,6 +72,9 @@ class DiscordBot(commands.Bot):
         else:
             synced = await self.tree.sync()
             print(f"Global sync: {len(synced)} command(s)")
+
+    async def on_ready(self):
+        print(f"Logged in as {self.user} (app_id={self.application_id})")
 
 
 bot = DiscordBot()
