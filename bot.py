@@ -100,10 +100,23 @@ def get_token():
 
 
 def get_google_credentials_from_env():
+    # Railway / cloud: JSON content stored directly in env var
+    creds_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+    if creds_json:
+        import tempfile
+        tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
+        tmp.write(creds_json)
+        tmp.flush()
+        tmp.close()
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = tmp.name
+        return tmp.name
+
+    # Local: env var points to a file path
     creds = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     if not creds:
         raise RuntimeError(
-            "Missing GOOGLE_APPLICATION_CREDENTIALS. Set it in system env or DiscordBot/env.env"
+            "Missing GOOGLE_APPLICATION_CREDENTIALS or GOOGLE_APPLICATION_CREDENTIALS_JSON. "
+            "Set one in system env or DiscordBot/env.env"
         )
 
     creds_path = Path(creds)
