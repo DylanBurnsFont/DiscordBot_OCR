@@ -134,7 +134,10 @@ async def _send_chunked(
         else:
             current = current + "\n" + line
     chunks.append(current)
-    await interaction.response.send_message(chunks[0], ephemeral=True)
+    if interaction.response.is_done():
+        await interaction.followup.send(chunks[0], ephemeral=True)
+    else:
+        await interaction.response.send_message(chunks[0], ephemeral=True)
     for chunk in chunks[1:]:
         await interaction.followup.send(chunk, ephemeral=True)
 
@@ -310,7 +313,7 @@ class ScoresCog(commands.Cog):
         # Fallback to registered player method
         player = get_player_by_discord_id(str(interaction.user.id))
         if not player:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "You are not registered. Use `/register` to get started.", ephemeral=True
             )
             return None
@@ -318,7 +321,7 @@ class ScoresCog(commands.Cog):
             guild_context_msg = ""
             if detected_guild_name:
                 guild_context_msg = f" Note: Detected {detected_guild_name} from channel context, but this guild is not in the database."
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"You are not in a guild. Re-register with `/register` and select a guild.{guild_context_msg}",
                 ephemeral=True,
             )
@@ -329,14 +332,14 @@ class ScoresCog(commands.Cog):
                 "SELECT name FROM game_guilds WHERE id = ?", (player["game_guild_id"],)
             ).fetchone()
         if not guild_row:
-            await interaction.response.send_message("Could not find your guild.", ephemeral=True)
+            await interaction.followup.send("Could not find your guild.", ephemeral=True)
             return None
         return guild_row["name"]
 
     async def _get_player_name(self, interaction: discord.Interaction) -> str | None:
         player = get_player_by_discord_id(str(interaction.user.id))
         if not player:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "You are not registered. Use `/register` to get started.", ephemeral=True
             )
             return None
@@ -352,13 +355,14 @@ class ScoresCog(commands.Cog):
         app_commands.Choice(name="Percent", value="percent"),
     ])
     async def gs_today(self, interaction: discord.Interaction, view: str = "scores"):
+        await interaction.response.defer(ephemeral=True)
         guild_name = await self._get_guild_name(interaction)
         if guild_name is None:
             return
         now = datetime.now()
         rows = get_today_guild_scores(guild_name)
         if not rows:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"No scores found for **{guild_name}** today.", ephemeral=True
             )
             return
@@ -394,6 +398,7 @@ class ScoresCog(commands.Cog):
         ]
     )
     async def gs_week(self, interaction: discord.Interaction, day: int | None = None, view: str = "total", format: str = "message"):
+        await interaction.response.defer(ephemeral=True)
         guild_name = await self._get_guild_name(interaction)
         if guild_name is None:
             return
@@ -403,7 +408,7 @@ class ScoresCog(commands.Cog):
             try:
                 ref_date = now.replace(day=day)
             except ValueError:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"Invalid day **{day}** for the current month.", ephemeral=True
                 )
                 return
@@ -412,7 +417,7 @@ class ScoresCog(commands.Cog):
         label = ref_date.strftime("week of %d %b %Y")
         scores_rows = get_total_weekly_leaderboard(guild_name, ref_date)
         if not scores_rows:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"No scores found for **{guild_name}** for the {label}.", ephemeral=True
             )
             return
@@ -445,7 +450,7 @@ class ScoresCog(commands.Cog):
             
             filename = f"guild_weekly_scores_{ref_date.strftime('%Y_%m_%d')}.csv"
             csv_file = _create_csv_file(csv_data, filename)
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"📊 **{guild_name}** weekly scores for {label}",
                 file=csv_file,
                 ephemeral=True
@@ -502,6 +507,7 @@ class ScoresCog(commands.Cog):
         month: int | None = None,
         format: str = "message",
     ):
+        await interaction.response.defer(ephemeral=True)
         guild_name = await self._get_guild_name(interaction)
         if guild_name is None:
             return
@@ -515,7 +521,7 @@ class ScoresCog(commands.Cog):
             label = f"{_DAY_NAMES[week_day]}s in {month_label}"
             scores_rows = get_weekday_scores_for_month(guild_name, now.year, month_num, week_day)
             if not scores_rows:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"No scores found for **{guild_name}** on {label}.", ephemeral=True
                 )
                 return
@@ -535,7 +541,7 @@ class ScoresCog(commands.Cog):
                 
                 filename = f"guild_monthly_{_DAY_NAMES[week_day].lower()}s_{now.year}_{month_num:02d}.csv"
                 csv_file = _create_csv_file(csv_data, filename)
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"📊 **{guild_name}** — {label}",
                     file=csv_file,
                     ephemeral=True
@@ -553,7 +559,7 @@ class ScoresCog(commands.Cog):
             label = month_label
             scores_rows = get_total_monthly_leaderboard(guild_name, now.year, month_num)
             if not scores_rows:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"No scores found for **{guild_name}** in {label}.", ephemeral=True
                 )
                 return
@@ -570,7 +576,7 @@ class ScoresCog(commands.Cog):
                 
                 filename = f"guild_monthly_scores_{now.year}_{month_num:02d}.csv"
                 csv_file = _create_csv_file(csv_data, filename)
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"📊 **{guild_name}** — {label}",
                     file=csv_file,
                     ephemeral=True
@@ -592,13 +598,14 @@ class ScoresCog(commands.Cog):
         app_commands.Choice(name="Percent", value="percent"),
     ])
     async def us_today(self, interaction: discord.Interaction, view: str = "score"):
+        await interaction.response.defer(ephemeral=True)
         player_name = await self._get_player_name(interaction)
         if player_name is None:
             return
         now = datetime.now()
         entry = get_today_score(player_name)
         if not entry:
-            await interaction.response.send_message("No score found for you today.", ephemeral=True)
+            await interaction.followup.send("No score found for you today.", ephemeral=True)
             return
         label = f"today ({now.strftime('%d %b %Y')})"
         if view == "percent":
@@ -611,7 +618,7 @@ class ScoresCog(commands.Cog):
                 if g:
                     guild_name = g["name"]
             if not guild_name:
-                await interaction.response.send_message("Could not determine your guild for % calculation.", ephemeral=True)
+                await interaction.followup.send("Could not determine your guild for % calculation.", ephemeral=True)
                 return
             guild_rows = get_today_guild_scores(guild_name)
             total = sum(_score_to_float(r['score']) for r in guild_rows)
@@ -619,7 +626,7 @@ class ScoresCog(commands.Cog):
             msg = f"Rank **#{entry['rank']}** — **{entry['score']}** ({pct:.1f}% of guild total {_fmt_score(total)})"
         else:
             msg = f"Rank **#{entry['rank']}** — **{entry['score']}**"
-        await interaction.response.send_message(
+        await interaction.followup.send(
             f"📊 **{player_name}** — {label}\n{msg}", ephemeral=True
         )
 
@@ -641,6 +648,7 @@ class ScoresCog(commands.Cog):
         ]
     )
     async def us_week(self, interaction: discord.Interaction, day: int | None = None, view: str = "total", format: str = "message"):
+        await interaction.response.defer(ephemeral=True)
         player_name = await self._get_player_name(interaction)
         if player_name is None:
             return
@@ -649,7 +657,7 @@ class ScoresCog(commands.Cog):
             try:
                 ref_date = now.replace(day=day)
             except ValueError:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"Invalid day **{day}** for the current month.", ephemeral=True
                 )
                 return
@@ -658,7 +666,7 @@ class ScoresCog(commands.Cog):
         label = ref_date.strftime("week of %d %b %Y")
         data = get_player_weekly_scores(player_name, ref_date)
         if not data["days_present"]:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"No scores found for the {label}.", ephemeral=True
             )
             return
@@ -698,7 +706,7 @@ class ScoresCog(commands.Cog):
             
             filename = f"user_weekly_scores_{player_name}_{ref_date.strftime('%Y_%m_%d')}.csv"
             csv_file = _create_csv_file(csv_data, filename)
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"📊 **{player_name}** weekly scores for {label}",
                 file=csv_file,
                 ephemeral=True
@@ -722,7 +730,7 @@ class ScoresCog(commands.Cog):
                     if g:
                         guild_name = g["name"]
                 if not guild_name:
-                    await interaction.response.send_message("Could not determine your guild for % calculation.", ephemeral=True)
+                    await interaction.followup.send("Could not determine your guild for % calculation.", ephemeral=True)
                     return
                 guild_rows = get_total_weekly_leaderboard(guild_name, ref_date)
                 guild_total = sum(r["total_score"] for r in guild_rows)
@@ -730,7 +738,7 @@ class ScoresCog(commands.Cog):
                 lines = [f"**{_fmt_score(data['total_score'])}** ({pct:.1f}% of guild total {_fmt_score(guild_total)}, {data['days_present']} day(s) submitted)"]
             else:
                 lines = [f"**Total: {_fmt_score(data['total_score'])}** ({data['days_present']} day(s) submitted)"]
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"📊 **{player_name}** — {label}\n" + "\n".join(lines), ephemeral=True
             )
 
@@ -755,6 +763,7 @@ class ScoresCog(commands.Cog):
         month: int | None = None,
         format: str = "message",
     ):
+        await interaction.response.defer(ephemeral=True)
         player_name = await self._get_player_name(interaction)
         if player_name is None:
             return
@@ -768,7 +777,7 @@ class ScoresCog(commands.Cog):
             label = f"{_DAY_NAMES[week_day]}s in {month_label}"
             data = get_player_weekday_scores_for_month(player_name, now.year, month_num, week_day)
             if not data["days_present"]:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"No scores found for {label}.", ephemeral=True
                 )
                 return
@@ -791,7 +800,7 @@ class ScoresCog(commands.Cog):
                 
                 filename = f"user_monthly_{_DAY_NAMES[week_day].lower()}s_{player_name}_{now.year}_{month_num:02d}.csv"
                 csv_file = _create_csv_file(csv_data, filename)
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"📊 **{player_name}** — {label}",
                     file=csv_file,
                     ephemeral=True
@@ -801,14 +810,14 @@ class ScoresCog(commands.Cog):
                     f"{int(d[:2])} {mon_abbr}: {data[d]}" if data.get(d) else f"{int(d[:2])} {mon_abbr}: —"
                     for d in dates
                 ] + [f"**Total: {_fmt_score(data['total_score'])}**"]
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"📊 **{player_name}** — {label}\n" + "\n".join(lines), ephemeral=True
                 )
         else:
             label = month_label
             data = get_player_monthly_scores(player_name, now.year, month_num)
             if not data["days_present"]:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"No scores found for {label}.", ephemeral=True
                 )
                 return
@@ -823,7 +832,7 @@ class ScoresCog(commands.Cog):
                 
                 filename = f"user_monthly_scores_{player_name}_{now.year}_{month_num:02d}.csv"
                 csv_file = _create_csv_file(csv_data, filename)
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"📊 **{player_name}** — {label}",
                     file=csv_file,
                     ephemeral=True
@@ -833,7 +842,7 @@ class ScoresCog(commands.Cog):
                     f"Days submitted: **{data['days_present']}**",
                     f"Total: **{_fmt_score(data['total_score'])}**",
                 ]
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"📊 **{player_name}** — {label}\n" + "\n".join(lines), ephemeral=True
                 )
 
@@ -853,6 +862,7 @@ class ScoresCog(commands.Cog):
     )
     async def guild_attendance(self, interaction: discord.Interaction, day: int | None = None, format: str = "message"):
         """Standalone attendance command - same functionality as guild-scores attendance"""
+        await interaction.response.defer(ephemeral=False)
         guild_name = await self._get_guild_name_from_user_submissions(interaction)
         if guild_name is None:
             return
@@ -862,7 +872,7 @@ class ScoresCog(commands.Cog):
             try:
                 ref_date = now.replace(day=day)
             except ValueError:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"Invalid day **{day}** for the current month.", ephemeral=True
                 )
                 return
@@ -900,7 +910,7 @@ class ScoresCog(commands.Cog):
                 })
             
             if not csv_data:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"🎉 Perfect attendance! All guild members attacked every day during the {label}.",
                     ephemeral=True
                 )
@@ -908,7 +918,7 @@ class ScoresCog(commands.Cog):
             
             filename = f"guild_attendance_{ref_date.strftime('%Y_%m_%d')}.csv"
             csv_file = _create_csv_file(csv_data, filename)
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"📊 **{guild_name}** attendance for {label}",
                 file=csv_file,
                 ephemeral=True
@@ -917,13 +927,13 @@ class ScoresCog(commands.Cog):
             # Heat chart format
             try:
                 heatmap_file = _create_attendance_heatmap(attendance_data, guild_name, label)
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"📊 **{guild_name}** Boss hit heatmap for {label}",
                     file=heatmap_file,
                     ephemeral=False
                 )
             except ValueError as e:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"Unable to create heatmap: {str(e)}",
                     ephemeral=True
                 )
@@ -952,8 +962,8 @@ class ScoresCog(commands.Cog):
                 lines.append("")
             
             if not lines:
-                await interaction.response.send_message(
-                    f"🎉 **{guild_name}** — Perfect attendance for {label}!\\nAll registered guild members attacked every day.",
+                await interaction.followup.send(
+                    f"🎉 **{guild_name}** — Perfect attendance for {label}!\nAll registered guild members attacked every day.",
                     ephemeral=True
                 )
                 return
@@ -975,6 +985,7 @@ class ScoresCog(commands.Cog):
     )
     async def guild_damage_report(self, interaction: discord.Interaction, day: int | None = None, format: str = "heatmap"):
         """Weekly damage report showing damage dealt by each player across weekdays"""
+        await interaction.response.defer(ephemeral=False)
         guild_name = await self._get_guild_name_from_user_submissions(interaction)
         if guild_name is None:
             return
@@ -984,7 +995,7 @@ class ScoresCog(commands.Cog):
             try:
                 ref_date = now.replace(day=day)
             except ValueError:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"Invalid day **{day}** for the current month.", ephemeral=True
                 )
                 return
@@ -1039,7 +1050,7 @@ class ScoresCog(commands.Cog):
                 damage_data = sorted(damage_data, key=lambda x: x['total_score'], reverse=True)
         
         if not damage_data:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"No damage data found for **{guild_name}** for the {label}.",
                 ephemeral=True
             )
@@ -1070,7 +1081,7 @@ class ScoresCog(commands.Cog):
             
             filename = f"guild_damage_{ref_date.strftime('%Y_%m_%d')}.csv"
             csv_file = _create_csv_file(csv_data, filename)
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"💥 **{guild_name}** damage report for {label}",
                 file=csv_file,
                 ephemeral=True
@@ -1079,13 +1090,13 @@ class ScoresCog(commands.Cog):
             # Heat chart format
             try:
                 heatmap_file = _create_damage_heatmap(damage_data, guild_name, label, ref_date)
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"💥 **{guild_name}** damage heatmap for {label}",
                     file=heatmap_file,
                     ephemeral=False
                 )
             except ValueError as e:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"Unable to create damage heatmap: {str(e)}",
                     ephemeral=True
                 )
@@ -1170,7 +1181,7 @@ class ScoresCog(commands.Cog):
                 lines.append("```")
             
             if not lines:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"No damage data found for **{guild_name}** for the {label}.",
                     ephemeral=True
                 )

@@ -11,9 +11,10 @@ class StreakCog(commands.Cog):
 
     @app_commands.command(name="user-streak", description="Show your current consecutive-day submission streak")
     async def user_streak_command(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
         player = get_player_by_discord_id(str(interaction.user.id))
         if not player:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "You are not registered. Use `/register` to get started.",
                 ephemeral=True,
             )
@@ -21,23 +22,24 @@ class StreakCog(commands.Cog):
 
         streak = get_streak(str(interaction.user.id))
         flame = "🔥" if streak > 0 else "❄️"
-        await interaction.response.send_message(
+        await interaction.followup.send(
             f"{flame} **{player['username']}** has a streak of **{streak}** consecutive day(s).",
             ephemeral=True,
         )
 
     @app_commands.command(name="streak", description="Show the submission streaks for all players in your guild")
     async def streak_command(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
         player = get_player_by_discord_id(str(interaction.user.id))
         if not player:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "You are not registered. Use `/register` to get started.",
                 ephemeral=True,
             )
             return
 
         if not player["game_guild_id"]:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "You are not in a guild. Re-register with `/register` and select a guild.",
                 ephemeral=True,
             )
@@ -52,14 +54,14 @@ class StreakCog(commands.Cog):
             ).fetchone()
 
         if not guild_row:
-            await interaction.response.send_message("Could not find your guild.", ephemeral=True)
+            await interaction.followup.send("Could not find your guild.", ephemeral=True)
             return
 
         guild_name = guild_row["name"]
         streaks = get_guild_streaks(guild_name)
 
         if not streaks:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"No players found in guild **{guild_name}**.",
                 ephemeral=True,
             )
@@ -70,7 +72,7 @@ class StreakCog(commands.Cog):
             flame = "🔥" if entry["streak"] > 0 else "❄️"
             lines.append(f"`{i}.` {flame} **{entry['username']}** — {entry['streak']} day(s)")
 
-        await interaction.response.send_message("\n".join(lines), ephemeral=False)
+        await interaction.followup.send("\n".join(lines), ephemeral=False)
 
 
 async def setup(bot: commands.Bot):

@@ -171,6 +171,8 @@ class ReportCog(commands.Cog):
             await interaction.response.send_message("❌ This command can only be used by the bot owner.", ephemeral=True)
             return
         
+        await interaction.response.defer(ephemeral=True)
+        
         # Log the command usage
         self._log_command_usage("guild-status", interaction.user)
             
@@ -213,7 +215,7 @@ class ReportCog(commands.Cog):
             inline=False
         )
         
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
     async def cog_load(self):
         """Called when cog is loaded."""

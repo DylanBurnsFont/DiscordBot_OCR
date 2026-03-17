@@ -70,10 +70,15 @@ bot = DiscordBot()
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: commands.CommandError):
     print(f"App command error: {repr(error)}")
-    if interaction.response.is_done():
-        await interaction.followup.send(f"Command failed: {error}", ephemeral=True)
-    else:
-        await interaction.response.send_message(f"Command failed: {error}", ephemeral=True)
+    try:
+        if interaction.response.is_done():
+            await interaction.followup.send(f"Command failed: {error}", ephemeral=True)
+        else:
+            await interaction.response.send_message(f"Command failed: {error}", ephemeral=True)
+    except discord.errors.NotFound:
+        pass  # Interaction expired, nothing we can do
+    except discord.errors.HTTPException:
+        pass  # Already acknowledged or other transient error
 
 
 def load_env_file(env_path):

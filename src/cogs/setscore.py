@@ -178,9 +178,11 @@ class SetScoreCog(commands.Cog):
             )
             return
         
+        await interaction.response.defer(ephemeral=True)
+        
         # Validate score format
         if not score or _score_to_float(score) == 0.0:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "❌ Invalid score format. Use formats like: 1.5B, 500M, 750K, 50000", 
                 ephemeral=True
             )
@@ -211,17 +213,17 @@ class SetScoreCog(commands.Cog):
                 readable_date = date_obj.strftime("%A, %B %d")
                 
                 guild_info = f" in **{guild_name}**" if guild_name else ""
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     f"✅ Set score for **{player_name}** to **{score}** on {readable_date}{guild_info}.",
                     ephemeral=True
                 )
             else:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     "❌ Failed to set score. Please try again.", 
                     ephemeral=True
                 )
         except Exception as e:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"❌ Error setting score: {str(e)}", 
                 ephemeral=True
             )
