@@ -19,52 +19,56 @@ from src.utils import downscaleImage
 
 def _configure_chart_font():
     import platform
-    
+    import sys
+
     system = platform.system()
-    print(f"Detected operating system: {system}")
+    print(f"[font] Detected OS: {system}", flush=True, file=sys.stderr)
+
+    installed = {font.name for font in font_manager.fontManager.ttflist}
+
     if system == "Windows":
-        candidates = [
-            "Segoe UI",             # Best overall Unicode on Windows (Latin, Greek, Thai, etc.)
-            "Segoe UI Historic",    # Extended Unicode coverage
-            "Microsoft YaHei",      # Chinese Simplified
-            "Microsoft JhengHei",   # Chinese Traditional
-            "Malgun Gothic",        # Korean
-            "Yu Gothic",            # Japanese
-            "Microsoft Sans Serif",
-            "Arial Unicode MS",
-            "DejaVu Sans",
-            "sans-serif",
+        font_paths = [
+            r"C:\Windows\Fonts\malgun.ttf",    # Korean + Latin
+            r"C:\Windows\Fonts\malgunbd.ttf",
+            r"C:\Windows\Fonts\msyh.ttc",      # Chinese + Japanese
         ]
+        for path in font_paths:
+            if os.path.exists(path):
+                font_manager.fontManager.addfont(path)
+                print(f"[font] Loaded: {path}", flush=True, file=sys.stderr)
+
+        candidates = ["Malgun Gothic", "Microsoft YaHei", "DejaVu Sans"]
+
     elif system == "Linux":
         candidates = [
-            "Noto Sans CJK JP",   # Japanese, Chinese, Korean — installed on your Pi
-            "Noto Sans Thai",     # Thai
-            "Noto Sans",          # Latin, Greek, and most other scripts
-            "Droid Sans Fallback", # Extra CJK fallback — also installed on your Pi
+            "Noto Sans CJK JP",
+            "Noto Sans CJK KR",
+            "Noto Sans CJK SC",
+            "Noto Sans Thai",
+            "Noto Sans",
+            "Droid Sans Fallback",
             "DejaVu Sans",
-            "sans-serif",
         ]
-    else:  # macOS or other
+
+    else:  # macOS
         candidates = [
-            "PingFang SC",          # Chinese Simplified
-            "PingFang TC",          # Chinese Traditional
-            "Hiragino Sans",        # Japanese
-            "Apple SD Gothic Neo",  # Korean
+            "PingFang SC",
+            "PingFang TC",
+            "Hiragino Sans",
+            "Apple SD Gothic Neo",
             "Helvetica Neue",
             "Arial Unicode MS",
             "DejaVu Sans",
-            "sans-serif",
         ]
-    installed = {font.name for font in font_manager.fontManager.ttflist}
-    
-    # Pick ALL installed candidates (not just the first), so matplotlib can
-    # fall back through the list for glyphs missing in earlier fonts
-    selected = next((name for name in candidates if name in installed), "DejaVu Sans")
-    
-    print(f"[font] Selected font: {selected}", flush=True, file=sys.stderr)
+
+    selected = [name for name in candidates if name in installed]
+    if not selected:
+        selected = ["DejaVu Sans"]
+
+    print(f"[font] Selected fonts: {selected}", flush=True, file=sys.stderr)
 
     plt.rcParams["font.family"] = "sans-serif"
-    plt.rcParams["font.sans-serif"] = [selected, "DejaVu Sans"]  # THIS is where the fallback list goes
+    plt.rcParams["font.sans-serif"] = selected + ["DejaVu Sans"]
     plt.rcParams["axes.unicode_minus"] = False
 
 
