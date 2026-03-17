@@ -106,21 +106,6 @@ _MONTH_CHOICES = [
     app_commands.Choice(name="December", value=12),
 ]
 
-CANDIDATES = [
-        "Microsoft YaHei",     # Chinese (Simplified) - best for CJK
-        "Microsoft JhengHei",  # Chinese (Traditional) 
-        "Malgun Gothic",       # Korean
-        "Yu Gothic",           # Japanese
-        "Segoe UI",
-        "Segoe UI Historic",   # Better Unicode support
-        "Calibri", 
-        "Tahoma",
-        "Arial",
-        "Microsoft Sans Serif", # Fallback with decent Unicode
-        "DejaVu Sans",
-        "sans-serif"
-    ]
-
 
 async def _send_chunked(
     interaction: discord.Interaction, header: str, score_lines: list[str]
@@ -145,13 +130,9 @@ async def _send_chunked(
 def _create_attendance_heatmap(attendance_data: dict, guild_name: str, label: str) -> discord.File:
     """Create a heatmap visualization of guild attendance data."""
     
-    # Suppress font warnings for missing glyphs (CJK characters)
-    import warnings
-    warnings.filterwarnings("ignore", message=".*missing from font.*")
-    
-    # Set matplotlib to use fonts that support CJK characters
-    plt.rcParams['font.family'] = CANDIDATES 
-    plt.rcParams['axes.unicode_minus'] = False  # Fix minus sign display
+    # Use the proper font configuration from mi_utils
+    from src.mi_utils import _configure_chart_font
+    _configure_chart_font()
     
     dates = attendance_data['dates']
     
@@ -1194,13 +1175,9 @@ class ScoresCog(commands.Cog):
 def _create_damage_heatmap(damage_data: list, guild_name: str, label: str, ref_date: datetime) -> discord.File:
     """Create a heatmap visualization of guild damage data with gradient colors."""
     
-    # Suppress font warnings for missing glyphs (CJK characters)
-    import warnings
-    warnings.filterwarnings("ignore", message=".*missing from font.*")
-    
-    # Set matplotlib to use fonts that support CJK characters
-    plt.rcParams['font.family'] = CANDIDATES 
-    plt.rcParams['axes.unicode_minus'] = False  # Fix minus sign display
+    # Use the proper font configuration from mi_utils
+    from src.mi_utils import _configure_chart_font
+    _configure_chart_font()
     
     if not damage_data:
         raise ValueError("No damage data to display")

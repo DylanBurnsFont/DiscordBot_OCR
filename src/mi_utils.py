@@ -17,17 +17,58 @@ from src.utils import downscaleImage
 
 
 def _configure_chart_font():
-    candidates = [
-        "Microsoft YaHei",
-        "Microsoft JhengHei",
-        "SimHei",
-        "Noto Sans CJK SC",
-        "Noto Sans CJK TC",
-        "WenQuanYi Micro Hei",
-        "Arial Unicode MS",
-    ]
+    import platform
+    
+    system = platform.system()
+    
+    if system == "Windows":
+        candidates = [
+            "Segoe UI",             # Best overall Unicode on Windows (Latin, Greek, Thai, etc.)
+            "Segoe UI Historic",    # Extended Unicode coverage
+            "Microsoft YaHei",      # Chinese Simplified
+            "Microsoft JhengHei",   # Chinese Traditional
+            "Malgun Gothic",        # Korean
+            "Yu Gothic",            # Japanese
+            "Microsoft Sans Serif",
+            "Arial Unicode MS",
+            "DejaVu Sans",
+            "sans-serif",
+        ]
+    elif system == "Linux":
+        candidates = [
+            "Noto Sans CJK JP",     # Japanese + CJK
+            "Noto Sans CJK KR",     # Korean
+            "Noto Sans CJK SC",     # Chinese Simplified
+            "Noto Sans CJK TC",     # Chinese Traditional
+            "Noto Sans",            # Latin, Greek, Thai, and many others
+            "WenQuanYi Micro Hei",  # CJK fallback
+            "DejaVu Sans",          # Latin/Greek fallback
+            "sans-serif",
+        ]
+    else:  # macOS or other
+        candidates = [
+            "PingFang SC",          # Chinese Simplified
+            "PingFang TC",          # Chinese Traditional
+            "Hiragino Sans",        # Japanese
+            "Apple SD Gothic Neo",  # Korean
+            "Helvetica Neue",
+            "Arial Unicode MS",
+            "DejaVu Sans",
+            "sans-serif",
+        ]
     installed = {font.name for font in font_manager.fontManager.ttflist}
-    selected = next((name for name in candidates if name in installed), "DejaVu Sans")
+    
+    # Pick ALL installed candidates (not just the first), so matplotlib can
+    # fall back through the list for glyphs missing in earlier fonts
+    selected = [name for name in candidates if name in installed]
+    
+    if not selected:
+        selected = ["DejaVu Sans"]
+    
+    # Always append sans-serif as the final fallback
+    if "sans-serif" not in selected:
+        selected.append("sans-serif")
+
     plt.rcParams["font.family"] = selected
     plt.rcParams["axes.unicode_minus"] = False
 
