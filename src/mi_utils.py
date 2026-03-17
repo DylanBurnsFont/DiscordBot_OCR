@@ -23,6 +23,7 @@ def _configure_chart_font():
         "SimHei",
         "Noto Sans CJK SC",
         "Noto Sans CJK TC",
+        "WenQuanYi Micro Hei",
         "Arial Unicode MS",
     ]
     installed = {font.name for font in font_manager.fontManager.ttflist}

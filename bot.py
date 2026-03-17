@@ -1,9 +1,15 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+import logging
 import os
 import sys
+import warnings
 from pathlib import Path
+
+# Suppress matplotlib findfont warnings for missing fonts on Linux/Railway
+warnings.filterwarnings("ignore", message="findfont:.*")
+logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 BOT_DIR = Path(__file__).resolve().parent
