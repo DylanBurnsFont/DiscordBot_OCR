@@ -100,18 +100,21 @@ def get_token():
 
 
 def get_google_credentials_from_env():
-    # Railway / cloud: JSON content stored directly in env var
-    creds_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-    if creds_json:
-        import tempfile
+    import tempfile
+
+    def _write_temp_creds(json_content: str) -> str:
         tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
-        tmp.write(creds_json)
+        tmp.write(json_content)
         tmp.flush()
         tmp.close()
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = tmp.name
         return tmp.name
 
-    # Local: env var points to a file path
+    # Railway / cloud: JSON content stored in dedicated env var
+    creds_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+    if creds_json:
+        return _write_temp_creds(creds_json)
+
     creds = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     if not creds:
         raise RuntimeError(
@@ -119,6 +122,11 @@ def get_google_credentials_from_env():
             "Set one in system env or DiscordBot/env.env"
         )
 
+    # If the variable contains JSON content instead of a file path, write it to a temp file
+    if creds.strip().startswith("{"):
+        return _write_temp_creds(creds)
+
+    # Local: env var points to a file path
     creds_path = Path(creds)
     if not creds_path.is_absolute():
         creds_path = (ROOT_DIR / creds).resolve()
