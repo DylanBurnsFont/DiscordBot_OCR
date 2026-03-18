@@ -8,9 +8,8 @@ Reads MI scores
 - [x] Make the timed messages explicit to a certain person and to their assigned guild
 - [x] Multi-guild support with role-based member detection
 - [ ] % share of guild damage today/week for guild members
-- [ ] When displaying scores, add a normalization parameter to account for different power guilds
 - [ ] Damage evolution over the weeks to track progress
-
+- [ ] Command to add entry to corrections list (retroactivly correct entries with the incorrect entry with correct one)
 ## Slash command
 - `/mi` now supports an optional `output_format` argument:
 	- `csv` (default): returns the score CSV file
