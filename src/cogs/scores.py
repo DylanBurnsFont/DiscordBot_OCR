@@ -969,6 +969,7 @@ class ScoresCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         # Use channel context first, then fallback to registered player
         guild_name = await self._get_guild_name(interaction)
+        print("Guild name from channel context:", guild_name)
         if guild_name is None:
             return
         now = datetime.now()
