@@ -9,3 +9,6 @@ src/__pycache__/
 src/cogs/__pycache__/
 check*
 test*
+*.jpg
+*.png
+*.jpeg
