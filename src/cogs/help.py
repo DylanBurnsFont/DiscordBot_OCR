@@ -1,7 +1,9 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+from pathlib import Path
 
+HELP_PDF = Path(__file__).resolve().parents[2] / "docs" / "detailedHelp.pdf"
 
 HELP_EMBED = discord.Embed(
     title="📖 Bot Commands",
@@ -77,6 +79,13 @@ class HelpCog(commands.Cog):
     async def help_command(self, interaction: discord.Interaction):
         await interaction.response.send_message(embed=HELP_EMBED, ephemeral=True)
 
-
+    @app_commands.command(name="help-pdf", description="Send the detailed PDF help")
+    async def help_pdf(self, interaction: discord.Interaction):
+        if not HELP_PDF.exists():
+            await interaction.response.send_message("Help PDF not available.", ephemeral=True)
+            return
+        # acknowledge privately, then post the file to channel
+        await interaction.response.send_message("Uploading detailed help (visible in channel)...", ephemeral=True)
+        await interaction.followup.send(file=discord.File(str(HELP_PDF)), ephemeral=True)
 async def setup(bot: commands.Bot):
     await bot.add_cog(HelpCog(bot))
