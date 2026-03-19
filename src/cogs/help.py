@@ -85,7 +85,7 @@ class HelpCog(commands.Cog):
             await interaction.response.send_message("Help PDF not available.", ephemeral=True)
             return
         # acknowledge privately, then post the file to channel
-        await interaction.response.send_message("Uploading detailed help (visible in channel)...", ephemeral=True)
+        await interaction.response.send_message("Uploading detailed help", ephemeral=True)
         await interaction.followup.send(file=discord.File(str(HELP_PDF)), ephemeral=True)
 async def setup(bot: commands.Bot):
     await bot.add_cog(HelpCog(bot))
