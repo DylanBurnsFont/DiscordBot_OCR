@@ -24,6 +24,7 @@ EXTENSIONS = [
     "src.cogs.ping",
     "src.cogs.streak",
     "src.cogs.help",
+    "src.cogs.corrections",
     "src.cogs.scores",
     "src.cogs.report",
     "src.cogs.setscore",
