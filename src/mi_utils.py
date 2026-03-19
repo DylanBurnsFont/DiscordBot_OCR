@@ -15,7 +15,8 @@ from matplotlib import font_manager
 
 from google.cloud import vision
 from src.utils import downscaleImage
-
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
 
 def _configure_chart_font():
     import platform

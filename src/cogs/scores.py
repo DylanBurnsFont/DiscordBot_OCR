@@ -31,6 +31,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.colors as mcolors
 from io import BytesIO
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
 
 def knubeScore(knubeScore, offset):
     mult = {'K': 1e3, 'M':1e6, 'B':1e9, 'T':1e12}
