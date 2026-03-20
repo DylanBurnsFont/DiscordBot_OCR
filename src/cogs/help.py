@@ -48,7 +48,7 @@ HELP_EMBED.add_field(
         "`/user-score today` — See your score for today.\n"
         "`/user-score week` — See your weekly scores.\n"
         "`/user-score month` — See your monthly scores.\n"
-        "\n**Note:** Attendance tracking shows all players who have ever scored for your guild. Damage reports are automatically sent daily."
+        "`/add-correction` — Submit a name correction. All instances of incorrect name will be substituted with the corrected version.\n"
     ),
     inline=False,
 )
@@ -57,6 +57,7 @@ HELP_EMBED.add_field(
     value=(
         "`/ping` — Check that the bot is online.\n"
         "`/help` — Show this message.\n"
+        "`/help-pdf` — Send the detailed PDF for usage and help.\n"
         "For questions, feedback or issues, contact **coomer314** on the Empire Discord server."
     ),
     inline=False,
@@ -64,7 +65,8 @@ HELP_EMBED.add_field(
 HELP_EMBED.add_field(
     name="👑 Admin Commands",
     value=(
-        "`/guild-status` — Show multi-guild configuration status (requires admin permissions)."
+        "`/guild-status` — Show multi-guild configuration status (requires admin permissions).\n"
+        "`/set-score` — Set a user's score (requires admin permissions)."
     ),
     inline=False,
 )
