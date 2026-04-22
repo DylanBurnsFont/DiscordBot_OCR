@@ -1,85 +1,701 @@
-[2026-03-18 20:24:57] [WARNING ] discord.ext.commands.bot: Privileged message content intent is missing, commands may not work as expected.
-[2026-03-18 20:24:57] [INFO    ] discord.client: logging in using static token
+[2026-04-15 18:28:46] [WARNING ] discord.ext.commands.bot: Privileged message content intent is missing, commands may not work as expected.
+[2026-04-15 18:28:46] [INFO    ] discord.client: logging in using static token
 [font] Detected OS: Linux
 [font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
-[2026-03-18 20:25:02] [INFO    ] discord.gateway: Shard ID None has connected to Gateway (Session ID: 388149d347f56d093cfa82d90c88159b).
-[2026-03-18 21:04:31] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 388149d347f56d093cfa82d90c88159b.
+[2026-04-15 18:29:00] [INFO    ] discord.gateway: Shard ID None has connected to Gateway (Session ID: c74c8296749c86c7795690fdfef8fdb1).
+[2026-04-15 18:51:11] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session c74c8296749c86c7795690fdfef8fdb1.
+[2026-04-15 20:54:49] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session c74c8296749c86c7795690fdfef8fdb1.
+[2026-04-15 21:28:46] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session c74c8296749c86c7795690fdfef8fdb1.
+[2026-04-15 22:46:42] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session c74c8296749c86c7795690fdfef8fdb1.
+[2026-04-15 22:55:11] [WARNING ] discord.gateway: Can't keep up, shard ID None websocket is 14.3s behind.
+[2026-04-16 00:32:23] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session c74c8296749c86c7795690fdfef8fdb1.
+[2026-04-16 02:07:30] [WARNING ] discord.gateway: Can't keep up, shard ID None websocket is 14.2s behind.
+[2026-04-16 02:12:22] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session c74c8296749c86c7795690fdfef8fdb1.
 [font] Detected OS: Linux
 [font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3588 (\N{THAI CHARACTER KHO KHWAI}) missing from current font.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
   plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3619 (\N{THAI CHARACTER RO RUA}) missing from current font.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
   plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3648 (\N{THAI CHARACTER SARA E}) missing from current font.
-  plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3588 (\N{THAI CHARACTER KHO KHWAI}) missing from current font.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
   plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3619 (\N{THAI CHARACTER RO RUA}) missing from current font.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
   plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3648 (\N{THAI CHARACTER SARA E}) missing from current font.
+[2026-04-16 03:06:53] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session c74c8296749c86c7795690fdfef8fdb1.
+[2026-04-16 03:15:27] [ERROR   ] discord.client: Attempting a reconnect in 0.07s
+Traceback (most recent call last):
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1173, in _create_direct_connection
+    hosts = await asyncio.shield(host_resolved)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 884, in _resolve_host
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/resolver.py", line 33, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/base_events.py", line 868, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/socket.py", line 974, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/client.py", line 724, in connect
+    self.ws = await asyncio.wait_for(coro, timeout=60.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/gateway.py", line 383, in from_client
+    socket = await client.http.ws_connect(str(url))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/http.py", line 566, in ws_connect
+    return await self.__session.ws_connect(url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 825, in _ws_connect
+    resp = await self.request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 574, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 544, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 911, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1187, in _create_direct_connection
+    raise ClientConnectorError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host gateway-us-east1-b.discord.gg:443 ssl:default [Temporary failure in name resolution]
+[2026-04-16 03:15:27] [ERROR   ] discord.client: Attempting a reconnect in 3.93s
+Traceback (most recent call last):
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1173, in _create_direct_connection
+    hosts = await asyncio.shield(host_resolved)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 884, in _resolve_host
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/resolver.py", line 33, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/base_events.py", line 868, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/socket.py", line 974, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/client.py", line 724, in connect
+    self.ws = await asyncio.wait_for(coro, timeout=60.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/gateway.py", line 383, in from_client
+    socket = await client.http.ws_connect(str(url))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/http.py", line 566, in ws_connect
+    return await self.__session.ws_connect(url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 825, in _ws_connect
+    resp = await self.request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 574, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 544, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 911, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1187, in _create_direct_connection
+    raise ClientConnectorError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host gateway-us-east1-b.discord.gg:443 ssl:default [Temporary failure in name resolution]
+[2026-04-16 03:15:31] [ERROR   ] discord.client: Attempting a reconnect in 6.78s
+Traceback (most recent call last):
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1173, in _create_direct_connection
+    hosts = await asyncio.shield(host_resolved)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 884, in _resolve_host
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/resolver.py", line 33, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/base_events.py", line 868, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/socket.py", line 974, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/client.py", line 724, in connect
+    self.ws = await asyncio.wait_for(coro, timeout=60.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/gateway.py", line 383, in from_client
+    socket = await client.http.ws_connect(str(url))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/http.py", line 566, in ws_connect
+    return await self.__session.ws_connect(url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 825, in _ws_connect
+    resp = await self.request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 574, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 544, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 911, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1187, in _create_direct_connection
+    raise ClientConnectorError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host gateway-us-east1-b.discord.gg:443 ssl:default [Temporary failure in name resolution]
+[2026-04-16 03:15:37] [ERROR   ] discord.client: Attempting a reconnect in 0.74s
+Traceback (most recent call last):
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1173, in _create_direct_connection
+    hosts = await asyncio.shield(host_resolved)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 884, in _resolve_host
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/resolver.py", line 33, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/base_events.py", line 868, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/socket.py", line 974, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/client.py", line 724, in connect
+    self.ws = await asyncio.wait_for(coro, timeout=60.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/gateway.py", line 383, in from_client
+    socket = await client.http.ws_connect(str(url))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/http.py", line 566, in ws_connect
+    return await self.__session.ws_connect(url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 825, in _ws_connect
+    resp = await self.request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 574, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 544, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 911, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1187, in _create_direct_connection
+    raise ClientConnectorError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host gateway-us-east1-b.discord.gg:443 ssl:default [Temporary failure in name resolution]
+[2026-04-16 03:15:38] [ERROR   ] discord.client: Attempting a reconnect in 22.17s
+Traceback (most recent call last):
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1173, in _create_direct_connection
+    hosts = await asyncio.shield(host_resolved)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 884, in _resolve_host
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/resolver.py", line 33, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/base_events.py", line 868, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/socket.py", line 974, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/client.py", line 724, in connect
+    self.ws = await asyncio.wait_for(coro, timeout=60.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/gateway.py", line 383, in from_client
+    socket = await client.http.ws_connect(str(url))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/http.py", line 566, in ws_connect
+    return await self.__session.ws_connect(url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 825, in _ws_connect
+    resp = await self.request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 574, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 544, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 911, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1187, in _create_direct_connection
+    raise ClientConnectorError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host gateway-us-east1-b.discord.gg:443 ssl:default [Temporary failure in name resolution]
+[2026-04-16 03:16:00] [ERROR   ] discord.client: Attempting a reconnect in 16.55s
+Traceback (most recent call last):
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1173, in _create_direct_connection
+    hosts = await asyncio.shield(host_resolved)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 884, in _resolve_host
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/resolver.py", line 33, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/base_events.py", line 868, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/socket.py", line 974, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/client.py", line 724, in connect
+    self.ws = await asyncio.wait_for(coro, timeout=60.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/gateway.py", line 383, in from_client
+    socket = await client.http.ws_connect(str(url))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/http.py", line 566, in ws_connect
+    return await self.__session.ws_connect(url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 825, in _ws_connect
+    resp = await self.request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 574, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 544, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 911, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1187, in _create_direct_connection
+    raise ClientConnectorError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host gateway-us-east1-b.discord.gg:443 ssl:default [Temporary failure in name resolution]
+[2026-04-16 03:16:17] [ERROR   ] discord.client: Attempting a reconnect in 42.84s
+Traceback (most recent call last):
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1173, in _create_direct_connection
+    hosts = await asyncio.shield(host_resolved)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 884, in _resolve_host
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/resolver.py", line 33, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/base_events.py", line 868, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/socket.py", line 974, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/client.py", line 724, in connect
+    self.ws = await asyncio.wait_for(coro, timeout=60.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/gateway.py", line 383, in from_client
+    socket = await client.http.ws_connect(str(url))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/http.py", line 566, in ws_connect
+    return await self.__session.ws_connect(url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 825, in _ws_connect
+    resp = await self.request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 574, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 544, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 911, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1187, in _create_direct_connection
+    raise ClientConnectorError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host gateway-us-east1-b.discord.gg:443 ssl:default [Temporary failure in name resolution]
+[2026-04-16 03:17:00] [ERROR   ] discord.client: Attempting a reconnect in 81.23s
+Traceback (most recent call last):
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1173, in _create_direct_connection
+    hosts = await asyncio.shield(host_resolved)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 884, in _resolve_host
+    addrs = await self._resolver.resolve(host, port, family=self._family)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/resolver.py", line 33, in resolve
+    infos = await self._loop.getaddrinfo(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/base_events.py", line 868, in getaddrinfo
+    return await self.run_in_executor(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/socket.py", line 974, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno -3] Temporary failure in name resolution
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/client.py", line 724, in connect
+    self.ws = await asyncio.wait_for(coro, timeout=60.0)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/asyncio/tasks.py", line 489, in wait_for
+    return fut.result()
+           ^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/gateway.py", line 383, in from_client
+    socket = await client.http.ws_connect(str(url))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/miniconda3/envs/ArcheroBot/lib/python3.11/site-packages/discord/http.py", line 566, in ws_connect
+    return await self.__session.ws_connect(url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 825, in _ws_connect
+    resp = await self.request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/client.py", line 574, in _request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 544, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 911, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dylan/.local/lib/python3.11/site-packages/aiohttp/connector.py", line 1187, in _create_direct_connection
+    raise ClientConnectorError(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host gateway-us-east1-b.discord.gg:443 ssl:default [Temporary failure in name resolution]
+[2026-04-16 03:18:21] [INFO    ] discord.gateway: Shard ID None session has been invalidated.
+[2026-04-16 03:18:31] [INFO    ] discord.gateway: Shard ID None has connected to Gateway (Session ID: 59ba6efd148359d68163c7800dabfebf).
+[2026-04-16 05:02:11] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-16 06:19:29] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-16 07:49:09] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-16 09:51:32] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[font] Detected OS: Linux
+[font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
+  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
   plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
 [font] Detected OS: Linux
 [font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3650 (\N{THAI CHARACTER SARA O}) missing from current font.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
   plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3588 (\N{THAI CHARACTER KHO KHWAI}) missing from current font.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
   plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3619 (\N{THAI CHARACTER RO RUA}) missing from current font.
-  plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3648 (\N{THAI CHARACTER SARA E}) missing from current font.
-  plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3650 (\N{THAI CHARACTER SARA O}) missing from current font.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
   plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3588 (\N{THAI CHARACTER KHO KHWAI}) missing from current font.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
   plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3619 (\N{THAI CHARACTER RO RUA}) missing from current font.
+[2026-04-16 13:31:53] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-16 14:04:16] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-16 15:16:38] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-16 19:11:46] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-16 20:05:23] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-16 22:58:44] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 01:53:38] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 02:36:05] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[font] Detected OS: Linux
+[font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
   plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3648 (\N{THAI CHARACTER SARA E}) missing from current font.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+[2026-04-17 05:31:28] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 07:44:43] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 08:18:27] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 08:29:20] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 11:18:37] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 12:29:14] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 12:55:23] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 13:23:22] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 17:07:05] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 18:52:16] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 19:47:25] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 21:28:17] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 21:50:03] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 21:52:22] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-17 23:21:07] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-18 01:25:43] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-18 02:05:16] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[font] Detected OS: Linux
+[font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
+  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+[2026-04-18 04:21:27] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-18 07:10:04] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-18 09:11:02] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-18 10:05:38] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-18 13:51:32] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-18 14:17:22] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-18 14:51:56] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-18 16:09:31] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-18 17:47:23] [WARNING ] discord.gateway: Can't keep up, shard ID None websocket is 14.3s behind.
+[2026-04-18 19:38:42] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-18 20:20:39] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-18 21:34:22] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[font] Detected OS: Linux
+[font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
   plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
 [font] Detected OS: Linux
 [font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3650 (\N{THAI CHARACTER SARA O}) missing from current font.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
   plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3588 (\N{THAI CHARACTER KHO KHWAI}) missing from current font.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
   plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3619 (\N{THAI CHARACTER RO RUA}) missing from current font.
-  plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3648 (\N{THAI CHARACTER SARA E}) missing from current font.
-  plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3650 (\N{THAI CHARACTER SARA O}) missing from current font.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
   plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3588 (\N{THAI CHARACTER KHO KHWAI}) missing from current font.
-  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3619 (\N{THAI CHARACTER RO RUA}) missing from current font.
-  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3648 (\N{THAI CHARACTER SARA E}) missing from current font.
-  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-[2026-03-18 22:55:54] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 388149d347f56d093cfa82d90c88159b.
-[2026-03-19 02:09:58] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 388149d347f56d093cfa82d90c88159b.
-[font] Detected OS: Linux
-[font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3650 (\N{THAI CHARACTER SARA O}) missing from current font.
-  plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3588 (\N{THAI CHARACTER KHO KHWAI}) missing from current font.
-  plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3619 (\N{THAI CHARACTER RO RUA}) missing from current font.
-  plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 3648 (\N{THAI CHARACTER SARA E}) missing from current font.
-  plt.tight_layout()
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3650 (\N{THAI CHARACTER SARA O}) missing from current font.
-  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3588 (\N{THAI CHARACTER KHO KHWAI}) missing from current font.
-  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3619 (\N{THAI CHARACTER RO RUA}) missing from current font.
-  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
-/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 3648 (\N{THAI CHARACTER SARA E}) missing from current font.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
   plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
 [font] Detected OS: Linux
 [font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
-[2026-03-19 03:35:13] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 388149d347f56d093cfa82d90c88159b.
-[2026-03-19 05:04:12] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 388149d347f56d093cfa82d90c88159b.
-[2026-03-19 06:14:11] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 388149d347f56d093cfa82d90c88159b.
-[2026-03-19 10:01:01] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 388149d347f56d093cfa82d90c88159b.
-[2026-03-19 11:40:11] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 388149d347f56d093cfa82d90c88159b.
-[2026-03-19 14:10:26] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 388149d347f56d093cfa82d90c88159b.
-[2026-03-19 17:26:00] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 388149d347f56d093cfa82d90c88159b.
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 381 (\N{LATIN CAPITAL LETTER Z WITH CARON}) missing from current font.
+  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+[font] Detected OS: Linux
+[font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+[2026-04-18 23:27:11] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-18 23:43:07] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-19 02:07:27] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[font] Detected OS: Linux
+[font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+[2026-04-19 05:48:57] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-19 09:05:57] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-19 12:24:40] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-19 12:32:43] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-19 16:04:16] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-19 16:19:29] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-19 19:17:10] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-19 21:09:46] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+Database ready: /home/dylan/DiscordBot_OCR/data/bot.db
+Global commands cleared.
+[report] Loaded with 2 guild configurations
+[report] All environment variables configured
+[report] Multi-guild damage report system loaded
+Guild sync: 18 command(s) synced to guild 1459826960698970228
+[report] Loop ready. Will fire daily at 03:00 Europe/Madrid
+[report] Configured guilds: AboveAll, MoeCafe
+Logged in as Archero2OCR#5251 (app_id=1476260416203264151)
+Process MI context menu invoked by .dylanburns on message 1494067042985181204
+['Pokoko', 'KLAUS', 'Bapal', '39.00T', '19.26T', '4.94T', '4', 'KNUBE', '2.15T', '5', 'Bastify', '2.07T', '6', 'Dupleex', '2.05T', '7', 'Endanger', '2.00T', '8', 'Stivizu', '1.80T', '9', 'DigitalMadness', '1.30T', '10', 'coomer314', '1.29T', '10', 'coomer314', '1.29T']
+
+['Pokoko', 'KLAUS', 'Bapal', '39.00T', '19.26T', '4.94T', 'KNUBE', '2.15T', 'Bastify', '2.07T', 'Dupleex', '2.05T', 'Endanger', '2.00T', 'Stivizu', '1.80T', 'DigitalMadness', '1.30T', 'coomer314', '1.29T', 'coomer314', '1.29T']
+✅ Loaded 35 corrections for guild: AboveAll
+['KLAUS', 'Pokoko', 'Bapal', '39.00T', '19.26T', '4.94T', '11', 'Bengan', '12', 'Aric90', '1.01T', '738.58B', '13', 'MikeWazowskiii', '647.82B', '14', 'Ziobre', '590.14B', '15', 'infection', '561.44B', '16', 'Sojú', '532.56B', '17', 'SakojiLewis', '527.21B', '10', 'coomer314', '1.29T']
+
+['KLAUS', 'Pokoko', 'Bapal', '39.00T', '19.26T', '4.94T', 'Bengan', 'Aric90', '1.01T', '738.58B', 'MikeWazowskiii', '647.82B', 'Ziobre', '590.14B', 'infection', '561.44B', 'Sojú', '532.56B', 'SakojiLewis', '527.21B', 'coomer314', '1.29T']
+['KLAUS', '18', 'Pokoko', 'Bapal', '39.00T', '19.26T', '4.94T', 'Kleoz', '507.02B', '19', '充錢', '500.52B', '20', 'Maxsanity', '471.88B', '21', 'Fince', '364.13B', '22', 'noTrix', '360.37B', '23', 'WhoCarez', '356.43B', '24 aceG', '355.65B', '10', 'coomer314', '1.29T']
+
+['KLAUS', 'Pokoko', 'Bapal', '39.00T', '19.26T', '4.94T', 'Kleoz', '507.02B', '充錢', '500.52B', 'Maxsanity', '471.88B', 'Fince', '364.13B', 'noTrix', '360.37B', 'WhoCarez', '356.43B', '24 aceG', '355.65B', 'coomer314', '1.29T']
+['KLAUS', '32', 'Pokoko', '39.00T', '19.26T', 'Bapal', '4.94T', 'afterma1h', '98.00B', '33', 'GlooM', '47.30B', '34', 'Clutchoo', '44.99B', '35', 'Djzman', '40.73B', '36', 'Manyaki', '32.15B', '37', 'Ray2020', '28.76B', '38', 'Ferdi503', '12.77B', '10', 'coomer314', '1.29T']
+
+['KLAUS', 'Pokoko', '39.00T', '19.26T', 'Bapal', '4.94T', 'afterma1h', '98.00B', 'GlooM', '47.30B', 'Clutchoo', '44.99B', 'Djzman', '40.73B', 'Manyaki', '32.15B', 'Ray2020', '28.76B', 'Ferdi503', '12.77B', 'coomer314', '1.29T']
+['KLAUS', 'Pokoko', '39.00T', 'Bapal', '19.26T', '4.94T', '25', 'JoyBoy', '322.04B', '26', 'FеяGе', '261.53B', '27', 'Mantoux', '223.97B', '28', 'Geldub', '220.22B', '29', 'CARLO', '153.43B', '30', 'RangaTang', '144.92B', '31', 'Finakicks', '103.96B', '10', 'coomer314', '1.29T']
+
+['KLAUS', 'Pokoko', '39.00T', 'Bapal', '19.26T', '4.94T', 'JoyBoy', '322.04B', 'FеяGе', '261.53B', 'Mantoux', '223.97B', 'Geldub', '220.22B', 'CARLO', '153.43B', 'RangaTang', '144.92B', 'Finakicks', '103.96B', 'coomer314', '1.29T']
+Scan 66: 37 inserted, 0 updated in DB
+[report] Firing daily report for 16_04_2026
+[report] Sent damage heatmap for AboveAll to 🤖┃ʙᴏᴛ-ᴛᴇꜱᴛɪɴɢ
+Logged in as Archero2OCR#5251 (app_id=1476260416203264151)
+Guild name from channel context: AboveAll
+Guild name from channel context: AboveAll
+[report] Firing daily report for 17_04_2026
+[report] Sent damage heatmap for AboveAll to 🤖┃ʙᴏᴛ-ᴛᴇꜱᴛɪɴɢ
+[report] Firing daily report for 18_04_2026
+[report] Sent damage heatmap for AboveAll to 🤖┃ʙᴏᴛ-ᴛᴇꜱᴛɪɴɢ
+Process MI context menu invoked by .dylanburns on message 1495162206570938488
+['KLAUS', 'Pokoko', 'coomer314', '35.77T', '18.76T', '2.41T', '4', 'XBapal', '2.18T', '5', 'Stivizu', '1.85T', '6', 'Bastify', '1.66T', '7', '㳘錢', '1.18T', '80', 'Ziobre', '1.14T', '9', 'Endanger', '898.86B', '10', 'Bengan', '856.42B', '3', 'coomer314', '2.41T']
+
+['KLAUS', 'Pokoko', 'coomer314', '35.77T', '18.76T', '2.41T', 'XBapal', '2.18T', 'Stivizu', '1.85T', 'Bastify', '1.66T', '㳘錢', '1.18T', 'Ziobre', '1.14T', 'Endanger', '898.86B', 'Bengan', '856.42B', 'coomer314', '2.41T']
+✅ Loaded 39 corrections for guild: AboveAll
+['Pokoko', 'KLAUS', 'coomer314', '35.77T', '18.76T', '2.41T', '11', 'infection', '577.00B', '12', 'Maxsanity', '528.28B', '13', 'DigitalMadness', '467.60B', '14', 'KNUBE', '439.45B', '15', 'Aric90', '381.02B', '16', 'AgrymFate', '351.82B', '17', 'JoyBoy', '343.41B', '3', 'coomer314', '2.41T']
+
+['Pokoko', 'KLAUS', 'coomer314', '35.77T', '18.76T', '2.41T', 'infection', '577.00B', 'Maxsanity', '528.28B', 'DigitalMadness', '467.60B', 'KNUBE', '439.45B', 'Aric90', '381.02B', 'AgrymFate', '351.82B', 'JoyBoy', '343.41B', 'coomer314', '2.41T']
+['Pokoko', 'KLAUS', 'coomer314', '35.77T', '18.76T', '2.41T', '18', 'MikeWazowskiii', '312.97B', '19', 'noTrix', '307.55B', '20', 'Seldub', '294.21B', '21', 'Sojú', '279.50B', '22', 'WhoCarez', '268.09B', '23', 'Dupleex', '242.47B', '24', 'afterma1h', '219.03B', '3', 'coomer314', '2.41T']
+
+['Pokoko', 'KLAUS', 'coomer314', '35.77T', '18.76T', '2.41T', 'MikeWazowskiii', '312.97B', 'noTrix', '307.55B', 'Seldub', '294.21B', 'Sojú', '279.50B', 'WhoCarez', '268.09B', 'Dupleex', '242.47B', 'afterma1h', '219.03B', 'coomer314', '2.41T']
+['KLAUS', '25', '26', '27', 'Pokoko', 'coomer314', '18.76T', '35.77T', '2.41T', '28', '29', '30', '31', 'FеяGе', '196.82B', 'Mantoux', '186.83B', 'Peyjal09', '165.97B', 'OM O O O O O', 'Clutchoo', '143.69B', 'Finakicks', '130.21B', 'CARLO', '128.65B', 'aceG', '126.15B', '3', 'coomer314', '2.41T']
+
+['KLAUS', 'Pokoko', 'coomer314', '18.76T', '35.77T', '2.41T', 'FеяGе', '196.82B', 'Mantoux', '186.83B', 'Peyjal09', '165.97B', 'OM O O O O O', 'Clutchoo', '143.69B', 'Finakicks', '130.21B', 'CARLO', '128.65B', 'aceG', '126.15B', 'coomer314', '2.41T']
+['Pokoko', 'KLAUS', 'coomer314', '35.77T', '18.76T', '2.41T', '34', 'SakojiLewis', '80.72B', '35', 'Kleoz', '77.02B', '36', 'DJZman', '35.37B', '37', 'MHN22', '24.38B', '38 Ferdi 503', '21.38B', '39', 'GlooM', '21.30B', '40', 'Ray2020', '20.94B', '3', 'coomer314', '2.41T']
+
+['Pokoko', 'KLAUS', 'coomer314', '35.77T', '18.76T', '2.41T', 'SakojiLewis', '80.72B', 'Kleoz', '77.02B', 'DJZman', '35.37B', 'MHN22', '24.38B', '38 Ferdi 503', '21.38B', 'GlooM', '21.30B', 'Ray2020', '20.94B', 'coomer314', '2.41T']
+['Pokoko', 'KLAUS', 'coomer314', '35.77T', '18.76T', '2.41T', '32', 'HoneyTea', '121.60B', '33', 'RangaTang', '93.87B', '34', 'SakojiLewis', '80.72B', '35', 'Kleoz', '77.02B', '36', 'DJzman', '35.37B', '37', 'MHN22', '24.38B', '38 Ferdi503', '21.38B', '3', 'coomer314', '2.41T']
+
+['Pokoko', 'KLAUS', 'coomer314', '35.77T', '18.76T', '2.41T', 'HoneyTea', '121.60B', 'RangaTang', '93.87B', 'SakojiLewis', '80.72B', 'Kleoz', '77.02B', 'DJzman', '35.37B', 'MHN22', '24.38B', '38 Ferdi503', '21.38B', 'coomer314', '2.41T']
+Scan 67: 41 inserted, 0 updated in DB
+Guild name from channel context: AboveAll
+Guild name from channel context: AboveAll
+Guild name from channel context: AboveAll
+Guild name from channel context: AboveAll
+[report] Firing daily report for 19_04_2026
+[report] Sent damage heatmap for AboveAll to 🤖┃ʙᴏᴛ-ᴛᴇꜱᴛɪɴɢ
+Process MI context menu invoked by .dylanburns on message 1495517080739643644
+['KLAUS', 'Pokoko', '15.07T', '22.53T', 'ToeRash', '3.37T', '4', 'XBapal', '2.80T', '5', 'KNUBE', '1.97T', '6', 'Dupleex', '1.87T', '7', 'Stivizu', '1.39T', '8', 'afterma1h', '1.10T', '9', 'Bastify', '818.60B', '10', '㳘錢', '773.66B', '14', 'coomer314', '381.83B']
+
+['KLAUS', 'Pokoko', '15.07T', '22.53T', 'ToeRash', '3.37T', 'XBapal', '2.80T', 'KNUBE', '1.97T', 'Dupleex', '1.87T', 'Stivizu', '1.39T', 'afterma1h', '1.10T', 'Bastify', '818.60B', '㳘錢', '773.66B', 'coomer314', '381.83B']
+✅ Loaded 45 corrections for guild: AboveAll
+['Pokoko', 'KLAUS', '22.53T', '15.07T', 'ToeRash', '3.37T', '11', 'Aric90', '590.89B', '12', 'DigitalMadness', '439.28B', '13', 'Ziobre', '433.34B', '14', 'coomer314', '381.83B', '15', 'Sojú', '358.11B', '16', 'infection', '278.53B', '17', 'noTrix', '216.23B', '14', 'coomer314', '381.83B'][font] Detected OS: Linux
+[font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+[2026-04-20 00:21:54] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 01:47:15] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[font] Detected OS: Linux
+[font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1342: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.tight_layout()
+/home/dylan/DiscordBot_OCR/src/cogs/scores.py:1346: UserWarning: Glyph 1256 (\N{CYRILLIC CAPITAL LETTER BARRED O}) missing from current font.
+  plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+[2026-04-20 03:45:47] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 04:30:13] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 06:03:43] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 06:35:37] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 07:48:19] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 09:17:31] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 10:53:15] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 12:11:55] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 12:32:59] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 13:31:28] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 16:04:51] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 18:01:54] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 19:13:48] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 22:36:13] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-20 22:59:23] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 00:48:23] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[font] Detected OS: Linux
+[font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
+[2026-04-21 03:37:34] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 03:58:24] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 05:49:36] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 06:22:55] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 06:47:51] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 07:58:24] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 08:39:34] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 10:03:41] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 11:39:53] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 13:48:28] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 14:14:25] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 16:13:18] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 19:17:08] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 20:10:39] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-21 23:35:45] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[font] Detected OS: Linux
+[font] Selected fonts: ['Noto Sans CJK JP', 'Noto Sans Thai', 'Noto Sans', 'Droid Sans Fallback', 'DejaVu Sans']
+[2026-04-22 03:04:12] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-22 06:19:19] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-22 06:49:37] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-22 07:22:30] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-22 09:38:07] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-22 11:57:45] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-22 15:05:25] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.
+[2026-04-22 16:24:52] [INFO    ] discord.gateway: Shard ID None has successfully RESUMED session 59ba6efd148359d68163c7800dabfebf.

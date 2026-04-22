@@ -32,23 +32,11 @@ def _is_unlimited_user(interaction: discord.Interaction) -> bool:
 
 
 def _get_weekdays_choices() -> list[app_commands.Choice[str]]:
-    """Generate choices for the current week's days."""
-    week_dates = _week_dates()
-    choices = []
-    
-    for i, date_str in enumerate(week_dates):
-        # Convert DD_MM_YYYY to readable format
-        day, month, year = date_str.split("_")
-        date_obj = datetime(int(year), int(month), int(day))
-        weekday_name = date_obj.strftime("%A")  # Monday, Tuesday, etc.
-        readable_date = date_obj.strftime("%m/%d")  # MM/DD format
-        
-        choices.append(app_commands.Choice(
-            name=f"{weekday_name} ({readable_date})",
-            value=date_str
-        ))
-    
-    return choices
+    """Return choices for weekdays (Monday-Sunday) as names only."""
+    weekdays = [
+        "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+    ]
+    return [app_commands.Choice(name=day, value=day) for day in weekdays]
 
 
 def set_player_score(player_name: str, score: str, scan_date: str, guild_id: int | None, submitted_by: str) -> bool:
@@ -179,15 +167,29 @@ class SetScoreCog(commands.Cog):
             return
         
         await interaction.response.defer(ephemeral=True)
-        
+
         # Validate score format
         if not score or _score_to_float(score) == 0.0:
             await interaction.followup.send(
-                "❌ Invalid score format. Use formats like: 1.5B, 500M, 750K, 50000", 
+                "❌ Invalid score format. Use formats like: 1.5B, 500M, 750K, 50000",
                 ephemeral=True
             )
             return
-        
+
+        # Calculate the date for the selected weekday in the current week
+        weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        try:
+            weekday_index = weekdays.index(day)
+        except ValueError:
+            await interaction.followup.send(
+                f"❌ Invalid weekday selected.", ephemeral=True
+            )
+            return
+        today = datetime.now()
+        monday = today - timedelta(days=today.weekday())
+        selected_date = monday + timedelta(days=weekday_index)
+        scan_date = selected_date.strftime("%d_%m_%Y")
+
         # Get guild context
         guild_name = get_guild_from_channel_category(interaction.channel)
         guild_id = None
@@ -195,23 +197,19 @@ class SetScoreCog(commands.Cog):
             guild_row = get_guild_by_name(guild_name)
             if guild_row:
                 guild_id = guild_row["id"]
-        
+
         # Set the score
         try:
             success = set_player_score(
                 player_name=player_name.strip(),
                 score=score.strip().upper(),
-                scan_date=day,
+                scan_date=scan_date,
                 guild_id=guild_id,
                 submitted_by=str(interaction.user.id)
             )
-            
+
             if success:
-                # Convert date back to readable format for confirmation
-                day_parts = day.split("_")
-                date_obj = datetime(int(day_parts[2]), int(day_parts[1]), int(day_parts[0]))
-                readable_date = date_obj.strftime("%A, %B %d")
-                
+                readable_date = selected_date.strftime("%A, %B %d")
                 guild_info = f" in **{guild_name}**" if guild_name else ""
                 await interaction.followup.send(
                     f"✅ Set score for **{player_name}** to **{score}** on {readable_date}{guild_info}.",
@@ -219,12 +217,12 @@ class SetScoreCog(commands.Cog):
                 )
             else:
                 await interaction.followup.send(
-                    "❌ Failed to set score. Please try again.", 
+                    "❌ Failed to set score. Please try again.",
                     ephemeral=True
                 )
         except Exception as e:
             await interaction.followup.send(
-                f"❌ Error setting score: {str(e)}", 
+                f"❌ Error setting score: {str(e)}",
                 ephemeral=True
             )
 
