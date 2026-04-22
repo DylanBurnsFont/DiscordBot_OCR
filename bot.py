@@ -29,6 +29,7 @@ EXTENSIONS = [
     "src.cogs.report",
     "src.cogs.setscore",
     "src.cogs.pray",
+    "src.cogs.reminder",
 ]
 
 

@@ -53,11 +53,21 @@ HELP_EMBED.add_field(
     inline=False,
 )
 HELP_EMBED.add_field(
+    name="⏰ Score Reminders",
+    value=(
+        "`/set-reminder time timezone` — Set a daily reminder to record your MI scores. "
+        "Provide your local time in `HH:MM` and your IANA timezone (e.g. `Europe/London`, `America/New_York`).\n"
+        "`/my-reminder` — View your current reminder setting.\n"
+        "`/clear-reminder` — Remove your daily reminder."
+    ),
+    inline=False,
+)
+HELP_EMBED.add_field(
     name="🛠️ Other",
     value=(
         "`/ping` — Check that the bot is online.\n"
-        "`/help` — Show this message.\n"
         "`/help-pdf` — Send the detailed PDF for usage and help.\n"
+        "`/help` — Show this message.\n"
         "For questions, feedback or issues, contact **coomer314** on the Empire Discord server."
     ),
     inline=False,

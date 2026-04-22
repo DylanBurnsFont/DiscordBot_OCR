@@ -113,6 +113,8 @@ def init_db(db_path: Path) -> None:
             "ALTER TABLE mi_scans  ADD COLUMN scan_date TEXT NOT NULL DEFAULT ''",
             "ALTER TABLE mi_scores ADD COLUMN scan_date TEXT NOT NULL DEFAULT ''",
             "ALTER TABLE mi_scores ADD COLUMN guild_id  INTEGER REFERENCES game_guilds(id)",
+            "ALTER TABLE players   ADD COLUMN reminder_time TEXT",
+            "ALTER TABLE players   ADD COLUMN reminder_timezone TEXT",
         ]:
             try:
                 con.execute(migration)
@@ -517,6 +519,40 @@ def get_player_weekday_scores_for_month(player_name: str, year: int, month: int,
         result["total_score"] += _score_to_float(row["score"])
         result["days_present"] += 1
     return result
+
+
+# ---------------------------------------------------------------------------
+# player reminders
+# ---------------------------------------------------------------------------
+
+def set_player_reminder(discord_user_id: str, reminder_time: str, reminder_timezone: str) -> None:
+    """Store a daily reminder (HH:MM + IANA timezone) for a player."""
+    with _connect() as con:
+        con.execute(
+            "UPDATE players SET reminder_time = ?, reminder_timezone = ? WHERE discord_user_id = ?",
+            (reminder_time, reminder_timezone, discord_user_id),
+        )
+
+
+def clear_player_reminder(discord_user_id: str) -> None:
+    """Remove the reminder for a player."""
+    with _connect() as con:
+        con.execute(
+            "UPDATE players SET reminder_time = NULL, reminder_timezone = NULL WHERE discord_user_id = ?",
+            (discord_user_id,),
+        )
+
+
+def get_players_with_reminders() -> list[sqlite3.Row]:
+    """Return all players that have an active reminder, including their guild name."""
+    with _connect() as con:
+        return con.execute("""
+            SELECT p.discord_user_id, p.username, p.reminder_time, p.reminder_timezone,
+                   g.name AS guild_name
+            FROM players p
+            LEFT JOIN game_guilds g ON g.id = p.game_guild_id
+            WHERE p.reminder_time IS NOT NULL AND p.reminder_timezone IS NOT NULL
+        """).fetchall()
 
 
 def get_weekday_scores_for_month(guild_name: str, year: int, month: int, weekday: int) -> list[dict]:
