@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import discord
 from discord import app_commands
@@ -185,7 +185,7 @@ class SetScoreCog(commands.Cog):
                 f"❌ Invalid weekday selected.", ephemeral=True
             )
             return
-        today = datetime.now()
+        today = datetime.now(timezone.utc)
         monday = today - timedelta(days=today.weekday())
         selected_date = monday + timedelta(days=weekday_index)
         scan_date = selected_date.strftime("%d_%m_%Y")

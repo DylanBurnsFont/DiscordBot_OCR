@@ -1,7 +1,7 @@
 import os
 import csv
 import io
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import unicodedata
 
 import discord
@@ -342,7 +342,7 @@ class ScoresCog(commands.Cog):
         guild_name = await self._get_guild_name(interaction)
         if guild_name is None:
             return
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         rows = get_today_guild_scores(guild_name)
         if not rows:
             await interaction.followup.send(
@@ -386,7 +386,7 @@ class ScoresCog(commands.Cog):
         if guild_name is None:
             return
         isKnube = interaction.user.id == 1391487700242141347
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         if day is not None:
             try:
                 ref_date = now.replace(day=day)
@@ -494,7 +494,7 @@ class ScoresCog(commands.Cog):
         guild_name = await self._get_guild_name(interaction)
         if guild_name is None:
             return
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         month_num = month if month is not None else now.month
         month_label = datetime(now.year, month_num, 1).strftime("%B %Y")
         mon_abbr = datetime(now.year, month_num, 1).strftime("%b")
@@ -585,7 +585,7 @@ class ScoresCog(commands.Cog):
         player_name = await self._get_player_name(interaction)
         if player_name is None:
             return
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         entry = get_today_score(player_name)
         if not entry:
             await interaction.followup.send("No score found for you today.", ephemeral=True)
@@ -635,7 +635,7 @@ class ScoresCog(commands.Cog):
         player_name = await self._get_player_name(interaction)
         if player_name is None:
             return
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         if day is not None:
             try:
                 ref_date = now.replace(day=day)
@@ -750,7 +750,7 @@ class ScoresCog(commands.Cog):
         player_name = await self._get_player_name(interaction)
         if player_name is None:
             return
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         month_num = month if month is not None else now.month
         month_label = datetime(now.year, month_num, 1).strftime("%B %Y")
         mon_abbr = datetime(now.year, month_num, 1).strftime("%b")
@@ -850,7 +850,7 @@ class ScoresCog(commands.Cog):
         if guild_name is None:
             return
         
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         if day is not None:
             try:
                 ref_date = now.replace(day=day)
@@ -974,7 +974,7 @@ class ScoresCog(commands.Cog):
         print("Guild name from channel context:", guild_name)
         if guild_name is None:
             return
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         if day is not None:
             try:
                 ref_date = now.replace(day=day)

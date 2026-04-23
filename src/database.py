@@ -37,7 +37,7 @@ mi_scores
 import calendar
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -213,10 +213,11 @@ def get_all_players() -> list[sqlite3.Row]:
 
 def create_scan(submitted_by: str | None = None, scan_date: str | None = None) -> int:
     """Insert a new scan record. Returns its id.
-    scan_date defaults to today in DD_MM_YYYY format if not supplied.
+    scan_date defaults to today (UTC) in DD_MM_YYYY format if not supplied.
+    The game reset is at midnight UTC, so UTC date is always the correct game day.
     """
     if scan_date is None:
-        scan_date = datetime.now().strftime("%d_%m_%Y")
+        scan_date = datetime.now(timezone.utc).strftime("%d_%m_%Y")
     with _connect() as con:
         cur = con.execute(
             "INSERT INTO mi_scans (submitted_by, scan_date) VALUES (?, ?)",
@@ -305,7 +306,7 @@ def get_scores_by_player(player_name: str) -> list[sqlite3.Row]:
 
 def get_today_score(player_name: str) -> sqlite3.Row | None:
     """Return today's mi_scores row for *player_name*, or None."""
-    today = datetime.now().strftime("%d_%m_%Y")
+    today = datetime.now(timezone.utc).strftime("%d_%m_%Y")
     with _connect() as con:
         return con.execute(
             "SELECT rank, score, scan_date FROM mi_scores WHERE player_name = ? AND scan_date = ?",
@@ -320,7 +321,7 @@ def get_today_guild_scores(guild_name: str, date: str | None = None) -> list[dic
     Includes both registered and unregistered players detected by OCR.
     Each dict contains: rank, player_name, score, player_id (None if unregistered).
     """
-    scan_date = date if date else datetime.now().strftime("%d_%m_%Y")
+    scan_date = date if date else datetime.now(timezone.utc).strftime("%d_%m_%Y")
     with _connect() as con:
         guild_row = con.execute(
             "SELECT id FROM game_guilds WHERE name = ?", (guild_name,)
@@ -340,7 +341,7 @@ def get_today_guild_scores(guild_name: str, date: str | None = None) -> list[dic
 
 def get_daily_scan_count(discord_user_id: str) -> int:
     """Return how many /mi scans the user has submitted today."""
-    today = datetime.now().strftime("%d_%m_%Y")
+    today = datetime.now(timezone.utc).strftime("%d_%m_%Y")
     with _connect() as con:
         row = con.execute(
             "SELECT COUNT(*) FROM mi_scans WHERE submitted_by = ? AND scan_date = ?",
@@ -401,7 +402,7 @@ def get_total_weekly_leaderboard(guild_name: str, ref_date: datetime | None = No
 def _week_dates(ref_date: datetime | None = None) -> list[str]:
     """Return DD_MM_YYYY strings for Mon–Sun of the week containing ref_date."""
     if ref_date is None:
-        ref_date = datetime.now()
+        ref_date = datetime.now(timezone.utc)
     monday = ref_date - timedelta(days=ref_date.weekday())
     return [(monday + timedelta(days=i)).strftime("%d_%m_%Y") for i in range(7)]
 
@@ -653,7 +654,7 @@ def get_streak(discord_user_id: str) -> int:
     streak = 0
     if not rows:
         return 0
-    today = datetime.now().date()
+    today = datetime.now(timezone.utc).date()
     last_day = datetime.strptime(rows[0]["day"], "%Y-%m-%d").date()
     # If the most recent scan is older than yesterday, streak is already broken
     if (today - last_day).days > 1:
@@ -704,7 +705,7 @@ def get_guild_streaks(guild_name: str) -> list[dict]:
     for row in scan_rows:
         days_by_user.setdefault(row["submitted_by"], []).append(row["day"])
 
-    today = datetime.now().date()
+    today = datetime.now(timezone.utc).date()
     results = []
     for p in players:
         uid = p["discord_user_id"]
